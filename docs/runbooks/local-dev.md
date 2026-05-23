@@ -14,7 +14,7 @@ uvicorn app.main:app --reload --port 8000
 ## Required Environment
 
 ```env
-DATABASE_URL=
+DATABASE_URL=postgresql+asyncpg://winzapp:winzapp@localhost:55432/winzapp
 REDIS_URL=redis://localhost:6379/0
 WA_APP_SECRET=
 WA_VERIFY_TOKEN=

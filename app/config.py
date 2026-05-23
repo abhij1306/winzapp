@@ -11,8 +11,8 @@ class Settings(BaseSettings):
     app_name: str = "WhatsApp Clinic Suite"
     api_v1_prefix: str = "/api/v1"
 
-    database_url: str = "postgresql+asyncpg://winzapp:winzapp@localhost:5432/winzapp"
-    test_database_url: str = "postgresql+asyncpg://winzapp:winzapp@localhost:5432/winzapp_test"
+    database_url: str = "postgresql+asyncpg://winzapp:winzapp@localhost:55432/winzapp"
+    test_database_url: str = "postgresql+asyncpg://winzapp:winzapp@localhost:55432/winzapp"
     redis_url: str = "redis://localhost:6379/0"
 
     wa_app_secret: str = ""

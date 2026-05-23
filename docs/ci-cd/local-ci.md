@@ -2,6 +2,8 @@
 
 Supported local path uses Docker Compose for real PostgreSQL and Redis.
 
+Local PostgreSQL maps to `localhost:55432` to avoid collisions with developer machines that already run Postgres on `5432`.
+
 ## Required Commands
 
 ```bash

@@ -15,16 +15,17 @@ Current focus: `app/main.py` → `app/database.py` → `app/models/` → `migrat
 
 ### ✅ Completed
 - [x] S1-T01: Project scaffolding, config, and local services
+- [x] S1-T02: Async database and Alembic setup
 
 ### 🔄 In Progress
-- [ ] Alembic + SQLAlchemy 2.0 async setup
+*(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Complete S1-T02 — SQLAlchemy async database setup and Alembic env
-2. Complete S1-T03 — `app/models/base.py` TimestampMixin + SoftDeleteMixin
-3. Complete S1-T04 — all 14 SQLAlchemy models from docs/architecture/data-model.md
-4. Complete S1-T05 — initial Alembic migration with triggers, indexes, and RLS
-5. Complete S1-T06 — common and WhatsApp Pydantic schemas
+1. Complete S1-T03 — `app/models/base.py` TimestampMixin + SoftDeleteMixin
+2. Complete S1-T04 — all 14 SQLAlchemy models from docs/architecture/data-model.md
+3. Complete S1-T05 — initial Alembic migration with triggers, indexes, and RLS
+4. Complete S1-T06 — common and WhatsApp Pydantic schemas
+5. Complete S1-T07 — Redis cache service
 
 ---
 
@@ -144,6 +145,7 @@ docs/product/traceability.md        Spec coverage map
 
 ### Local Docker
 - Docker Compose is the supported local Postgres/Redis path, but tests cannot start services if Docker Desktop's Linux engine is not running. Start Docker Desktop before running the full local CI path.
+- Local Compose PostgreSQL uses host port `55432`, not `5432`, to avoid connecting tests to a different local Postgres installation.
 
 ---
 

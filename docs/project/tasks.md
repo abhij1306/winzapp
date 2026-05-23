@@ -19,7 +19,7 @@ Acceptance criteria:
 Test requirement: `tests/test_health.py`.
 
 ### S1-T02: Async database and Alembic setup
-- [ ] Status: pending
+- [x] Status: completed
 
 Build SQLAlchemy 2.0 async engine/session, `get_db`, Alembic env, and test DB fixtures against real Postgres.
 
