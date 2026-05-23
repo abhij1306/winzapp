@@ -32,7 +32,7 @@ Acceptance criteria:
 Test requirement: DB fixture smoke test.
 
 ### S1-T03: SQLAlchemy base mixins
-- [ ] Status: pending
+- [x] Status: completed
 
 Create `TimestampMixin` and `SoftDeleteMixin`.
 

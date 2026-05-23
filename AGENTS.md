@@ -16,16 +16,17 @@ Current focus: `app/main.py` → `app/database.py` → `app/models/` → `migrat
 ### ✅ Completed
 - [x] S1-T01: Project scaffolding, config, and local services
 - [x] S1-T02: Async database and Alembic setup
+- [x] S1-T03: SQLAlchemy base mixins
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Complete S1-T03 — `app/models/base.py` TimestampMixin + SoftDeleteMixin
-2. Complete S1-T04 — all 14 SQLAlchemy models from docs/architecture/data-model.md
-3. Complete S1-T05 — initial Alembic migration with triggers, indexes, and RLS
-4. Complete S1-T06 — common and WhatsApp Pydantic schemas
-5. Complete S1-T07 — Redis cache service
+1. Complete S1-T04 — all 14 SQLAlchemy models from docs/architecture/data-model.md
+2. Complete S1-T05 — initial Alembic migration with triggers, indexes, and RLS
+3. Complete S1-T06 — common and WhatsApp Pydantic schemas
+4. Complete S1-T07 — Redis cache service
+5. Complete S1-T08 — utilities, structured logging, and audit service
 
 ---
 

@@ -1,3 +1,3 @@
-from app.models.base import Base
+from app.models.base import Base, SoftDeleteMixin, TimestampMixin
 
-__all__ = ["Base"]
+__all__ = ["Base", "SoftDeleteMixin", "TimestampMixin"]
