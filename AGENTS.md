@@ -7,7 +7,7 @@
 **Sprint 3 of 3 — Automation, Dashboard, and Pilot Launch**
 Build owner authentication, operational APIs, scheduler jobs, dashboard workflows, observability, and the pilot launch checklist. Keep the dashboard minimal and operations-focused for the diagnostics pilot.
 
-Current focus: Sprint 3 API setup: failed message inbox API → scheduler jobs
+Current focus: Sprint 3 automation setup: scheduler jobs → minimal dashboard
 
 ---
 
@@ -41,15 +41,16 @@ Current focus: Sprint 3 API setup: failed message inbox API → scheduler jobs
 - [x] S3-T03: Test booking operations API
 - [x] S3-T04: Pending reports upload API
 - [x] S3-T05: Patient and test catalog APIs
+- [x] S3-T06: Failed message inbox and retry API
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Build failed message inbox and retry API
-2. Build scheduler jobs
-3. Build minimal dashboard
-4. Add observability and alerting
+1. Build scheduler jobs
+2. Build minimal dashboard
+3. Add observability and alerting
+4. Prepare pilot launch checklist
 
 ---
 

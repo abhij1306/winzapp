@@ -287,7 +287,7 @@ Pilot dashboard support for patients and test catalog maintenance.
 Test requirement: `tests/test_api/test_patients.py` and `tests/test_api/test_tests.py`.
 
 ### S3-T06: Failed message inbox and retry API
-- [ ] Status: pending; blocked by S1-T12
+- [x] Status: completed
 
 List unresolved failed messages and replay payloads through flow engine.
 
