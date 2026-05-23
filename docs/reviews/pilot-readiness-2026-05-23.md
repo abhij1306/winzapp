@@ -18,6 +18,7 @@ release-gate documentation.
 | Webhook idempotency accessed RLS-protected `messages` without clinic scope. | High | Resolve clinic first, set tenant context, and filter idempotency by `clinic_id`. |
 | Multi-commit request and scheduler paths could lose or leak PostgreSQL tenant context. | High | Set session tenant context for the operation and clear it before the connection returns to the pool. |
 | `/health` did not report the scheduler heartbeat required by observability acceptance criteria. | High | Include `scheduler` status based on the Redis heartbeat key. |
+| GitHub Actions reported that Node.js 20 action execution is removed in September 2026 and defaults change on June 2, 2026. | Medium | Run JavaScript actions under Node.js 24 now so CI is verified before the platform transition. |
 | Release documentation used stale routes and omitted Meta phone-number replacement. | Medium | Update README, webhook runbook, and traceability map. |
 
 ## Verification Gates
