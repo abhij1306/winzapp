@@ -201,7 +201,7 @@ Classify diagnostics intents: test booking, report inquiry, home collection, can
 Test requirement: `tests/test_services/test_intent_router.py`.
 
 ### S2-T02: Diagnostics test booking walk-in flow
-- [ ] Status: pending; blocked by S2-T01
+- [x] Status: completed
 
 Category, test selection, confirmation, booking creation, audit, session clear.
 
