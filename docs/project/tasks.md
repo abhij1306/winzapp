@@ -259,7 +259,7 @@ Implement owner OTP send/verify and short-lived JWT.
 Test requirement: `tests/test_api/test_auth_otp.py`.
 
 ### S3-T02: Clinic settings API
-- [ ] Status: pending; blocked by S3-T01
+- [x] Status: completed
 
 Get/update clinic settings with cache invalidation and audit.
 

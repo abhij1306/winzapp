@@ -228,5 +228,9 @@ async def invalidate_clinic_cache(phone_number_id: str) -> None:
     await redis_delete(clinic_cache_key(phone_number_id))
 
 
+async def invalidate_clinic_id_cache(clinic_id: str) -> None:
+    await redis_delete(clinic_id_cache_key(clinic_id))
+
+
 async def invalidate_tests_cache(clinic_id: str) -> None:
     await redis_delete(catalog_cache_key(clinic_id))
