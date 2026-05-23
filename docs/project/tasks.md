@@ -294,7 +294,7 @@ List unresolved failed messages and replay payloads through flow engine.
 Test requirement: `tests/test_api/test_failed_messages.py`.
 
 ### S3-T07: Scheduler jobs
-- [ ] Status: pending; blocked by S2-T07
+- [x] Status: completed
 
 Implement fasting reminders, review requests, recall reminders, daily digest, and scheduler heartbeat. Appointment jobs remain Post-pilot.
 
