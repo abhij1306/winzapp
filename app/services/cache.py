@@ -23,6 +23,10 @@ def clinic_cache_key(phone_number_id: str) -> str:
     return f"clinic:{phone_number_id}"
 
 
+def clinic_id_cache_key(clinic_id: str) -> str:
+    return f"clinic-id:{clinic_id}"
+
+
 def catalog_cache_key(clinic_id: str) -> str:
     return f"tests:{clinic_id}"
 
@@ -139,6 +143,25 @@ async def get_clinic_cached(
         Clinic.settings["wa_phone_number_id"].as_string() == phone_number_id,
         Clinic.deleted_at.is_(None),
     )
+    clinic = (await db.execute(statement)).scalar_one_or_none()
+    if clinic is None:
+        return None
+
+    result = clinic_to_dict(clinic)
+    await redis_set_json(key, CLINIC_CACHE_TTL_SECONDS, result)
+    return result
+
+
+async def get_clinic_by_id_cached(
+    clinic_id: str,
+    db: AsyncSession,
+) -> dict[str, object] | None:
+    key = clinic_id_cache_key(clinic_id)
+    cached = await redis_get(key)
+    if cached is not None:
+        return loads_dict(cached)
+
+    statement = select(Clinic).where(Clinic.id == clinic_id, Clinic.deleted_at.is_(None))
     clinic = (await db.execute(statement)).scalar_one_or_none()
     if clinic is None:
         return None

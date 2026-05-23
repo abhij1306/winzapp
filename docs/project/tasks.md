@@ -111,7 +111,7 @@ Acceptance criteria:
 Test requirement: `tests/test_utils/test_phone.py` and `tests/test_services/test_audit.py`.
 
 ### S1-T09: Feature flags and LLM service abstraction
-- [ ] Status: pending
+- [x] Status: completed
 
 Build `require_feature()` and `app/services/llm_service.py` with Groq default provider configuration.
 
