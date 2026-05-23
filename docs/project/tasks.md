@@ -58,7 +58,7 @@ Acceptance criteria:
 Test requirement: `tests/test_models/test_model_fields.py`.
 
 ### S1-T05: Initial migration with RLS and triggers
-- [ ] Status: pending
+- [x] Status: completed
 
 Create initial schema migration.
 

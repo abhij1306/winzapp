@@ -8,7 +8,9 @@ from sqlalchemy.sql import func
 
 
 class Base(DeclarativeBase):
-    pass
+    type_annotation_map = {
+        datetime: DateTime(timezone=True),
+    }
 
 
 class TimestampMixin:
