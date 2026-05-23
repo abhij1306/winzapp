@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
+from app.api import api_v1_router
 from app.config import get_settings
 from app.services.health import get_health_status
 from app.utils.logger import configure_logging
@@ -10,6 +11,7 @@ settings = get_settings()
 configure_logging(settings.app_env)
 app = FastAPI(title=settings.app_name)
 app.include_router(whatsapp_router)
+app.include_router(api_v1_router)
 
 
 @app.get("/health")

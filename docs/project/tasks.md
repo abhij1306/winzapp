@@ -229,7 +229,7 @@ Commands: today's tests, pending reports, send report, cancel booking, daily sta
 Test requirement: `tests/test_flows/test_admin_flow.py`.
 
 ### S2-T06: Storage service and report-ready API
-- [ ] Status: pending; blocked by S2-T02
+- [x] Status: completed
 
 Upload/pass-through report PDF, create 24-hour signed URL, send WhatsApp document, update booking, audit, create recall where relevant.
 

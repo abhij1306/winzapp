@@ -21,6 +21,7 @@ ADMIN_UNAUTHORIZED = "Ye command sirf clinic owner ke liye available hai."
 ADMIN_UNKNOWN_COMMAND = "Admin command samajh nahi paaya."
 ADMIN_REPORT_NOT_FOUND = "Ready report nahi mili. Pehle report upload/ready karein."
 ADMIN_REPORT_SENT = "{test_name} report patient ko bhej di gayi hai."
+REPORT_DELIVERY_CAPTION = "{test_name} report attached hai."
 
 
 class BookingSummary(Protocol):

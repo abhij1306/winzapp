@@ -7,7 +7,7 @@
 **Sprint 2 of 3 — Diagnostics Conversation and Report Delivery**
 Build the diagnostics patient conversation layer: intent routing, test booking, home collection, report inquiry, cancellation, admin commands, report-ready delivery, and recall scheduling. Keep routing rule-first, keep LLM fallback feature-flagged, and keep GP appointment conversation flows Post-pilot.
 
-Current focus: `app/services/storage.py` → `app/api/v1/report_ready.py` → `app/services/recall_scheduling.py`
+Current focus: `app/services/recall_scheduling.py` → `app/scheduler.py` → `scripts/register_meta_templates.py`
 
 ---
 
@@ -33,15 +33,16 @@ Current focus: `app/services/storage.py` → `app/api/v1/report_ready.py` → `a
 - [x] S2-T03: Diagnostics home collection flow
 - [x] S2-T04: Report inquiry and cancellation flows
 - [x] S2-T05: Admin WhatsApp diagnostics commands
+- [x] S2-T06: Storage service and report-ready API
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Complete S2-T06 — storage service and report-ready API
-2. Complete S2-T07 — recall scheduling engine
-3. Complete S2-T08 — message template registration and reminder readiness
-4. Prepare Sprint 3 OTP auth API
+1. Complete S2-T07 — recall scheduling engine
+2. Complete S2-T08 — message template registration and reminder readiness
+3. Prepare Sprint 3 OTP auth API
+4. Prepare Sprint 3 clinic settings API
 
 ---
 

@@ -48,7 +48,7 @@ This file proves that the archived spec has not been lost. Every major requireme
 | `PUT /api/v1/clinics/{id}/test-bookings/{booking_id}` | API-004 | Pilot MVP | S3-T03 |
 | `POST /api/v1/clinics/{id}/test-bookings/{booking_id}/report` | API-004, REP-001 | Pilot MVP | S3-T04 |
 | `DELETE /api/v1/clinics/{id}/test-bookings/{booking_id}` | API-004 | Pilot MVP | S2-T06/S3-T03 |
-| `POST /api/v1/report-ready` | API-005, REP-002 | Pilot MVP | S2-T07 |
+| `POST /api/v1/report-ready` | API-005, REP-002 | Pilot MVP | S2-T06 |
 | `GET /api/v1/clinics/{id}/patients` | API-006 | Pilot MVP | S3-T05 |
 | `GET /api/v1/clinics/{id}/patients/{patient_id}` | API-006 | Pilot MVP | S3-T05 |
 | `PUT /api/v1/clinics/{id}/patients/{patient_id}` | API-006 | Pilot MVP | S3-T05 |
