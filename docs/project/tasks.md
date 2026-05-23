@@ -266,7 +266,7 @@ Get/update clinic settings with cache invalidation and audit.
 Test requirement: `tests/test_api/test_clinic_settings.py`.
 
 ### S3-T03: Test booking operations API
-- [ ] Status: pending; blocked by S3-T01
+- [x] Status: completed
 
 List, filter, update, create, and soft-delete test bookings.
 
