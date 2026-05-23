@@ -273,7 +273,7 @@ List, filter, update, create, and soft-delete test bookings.
 Test requirement: `tests/test_api/test_test_bookings.py`.
 
 ### S3-T04: Pending reports upload API
-- [ ] Status: pending; blocked by S2-T06
+- [x] Status: completed
 
 Dashboard upload path for report PDF delivery.
 
