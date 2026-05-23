@@ -72,7 +72,7 @@ Acceptance criteria:
 Test requirement: `tests/test_migrations/test_schema.py`.
 
 ### S1-T06: Common and WhatsApp Pydantic schemas
-- [ ] Status: pending
+- [x] Status: completed
 
 Create shared response schemas and WhatsApp webhook payload schemas.
 
