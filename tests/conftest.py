@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.config import get_settings
 from app.main import app
+from app.models import Base
 
 
 @pytest.fixture
@@ -20,12 +21,24 @@ def client() -> Generator[TestClient, None, None]:
 @pytest_asyncio.fixture
 async def db_session() -> AsyncGenerator[AsyncSession, None]:
     settings = get_settings()
-    engine = create_async_engine(settings.test_database_url, pool_pre_ping=True)
-    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    admin_engine = create_async_engine(settings.test_database_url, pool_pre_ping=True)
     schema_name = f"test_{uuid4().hex}"
 
-    async with engine.begin() as connection:
+    async with admin_engine.begin() as connection:
         await connection.execute(text(f'CREATE SCHEMA "{schema_name}"'))
+
+    engine = create_async_engine(
+        settings.test_database_url,
+        pool_pre_ping=True,
+        connect_args={"server_settings": {"search_path": f"{schema_name},public"}},
+    )
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+
+    async with engine.begin() as connection:
+        await connection.run_sync(lambda sync_connection: Base.metadata.create_all(
+            sync_connection,
+            checkfirst=False,
+        ))
 
     try:
         async with session_factory() as session:
@@ -33,6 +46,7 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
             yield session
             await session.rollback()
     finally:
-        async with engine.begin() as connection:
+        async with admin_engine.begin() as connection:
             await connection.execute(text(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE'))
         await engine.dispose()
+        await admin_engine.dispose()

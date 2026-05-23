@@ -85,7 +85,7 @@ Acceptance criteria:
 Test requirement: `tests/test_schemas/test_whatsapp_schemas.py` and `tests/test_schemas/test_common_schemas.py`.
 
 ### S1-T07: Redis cache service
-- [ ] Status: pending
+- [x] Status: completed
 
 Build cache helpers for clinic config, test catalog, and conversation sessions.
 
