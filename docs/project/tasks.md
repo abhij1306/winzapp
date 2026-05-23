@@ -99,7 +99,7 @@ Acceptance criteria:
 Test requirement: `tests/test_services/test_cache.py` using real Redis test instance.
 
 ### S1-T08: Utilities, structured logging, and audit service
-- [ ] Status: pending
+- [x] Status: completed
 
 Build phone normalization/masking, IST datetime helpers, structlog setup, and `write_audit()`.
 
