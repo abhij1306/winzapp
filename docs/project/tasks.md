@@ -151,7 +151,7 @@ Acceptance criteria:
 Test requirement: `tests/test_flows/test_consent_flow.py`.
 
 ### S1-T12: WhatsApp webhook handler
-- [ ] Status: pending
+- [x] Status: completed
 
 Build the webhook entrypoint.
 

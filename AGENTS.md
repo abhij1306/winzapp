@@ -25,15 +25,15 @@ Current focus: `app/main.py` → `app/database.py` → `app/models/` → `migrat
 - [x] S1-T09: Feature flags and LLM service abstraction
 - [x] S1-T10: WhatsApp sender service
 - [x] S1-T11: Flow engine base and consent flow
+- [x] S1-T12: WhatsApp webhook handler
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Complete S1-T12 — WhatsApp webhook handler
-2. Complete S1-T13 — local CI, GitHub Actions, and Railway skeleton
-3. Complete S1-T14 — pilot seed data and Meta template registration scaffold
-4. Start S2-T01 — rule-first diagnostics intent router
+1. Complete S1-T13 — local CI, GitHub Actions, and Railway skeleton
+2. Complete S1-T14 — pilot seed data and Meta template registration scaffold
+3. Start S2-T01 — rule-first diagnostics intent router
 
 ---
 
