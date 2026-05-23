@@ -7,7 +7,7 @@
 **Sprint 2 of 3 — Diagnostics Conversation and Report Delivery**
 Build the diagnostics patient conversation layer: intent routing, test booking, home collection, report inquiry, cancellation, admin commands, report-ready delivery, and recall scheduling. Keep routing rule-first, keep LLM fallback feature-flagged, and keep GP appointment conversation flows Post-pilot.
 
-Current focus: `app/services/intent_router.py` → `app/flows/test_booking_flow.py` → `app/flows/home_collection_flow.py`
+Current focus: `app/flows/admin_flow.py` → `app/services/storage.py` → `app/api/v1/report_ready.py`
 
 ---
 
@@ -31,15 +31,16 @@ Current focus: `app/services/intent_router.py` → `app/flows/test_booking_flow.
 - [x] S2-T01: Rule-first diagnostics intent router
 - [x] S2-T02: Diagnostics test booking walk-in flow
 - [x] S2-T03: Diagnostics home collection flow
+- [x] S2-T04: Report inquiry and cancellation flows
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Complete S2-T04 — report inquiry and cancellation flows
-2. Complete S2-T05 — admin WhatsApp diagnostics commands
-3. Complete S2-T06 — storage service and report-ready API
-4. Complete S2-T07 — recall scheduling engine
+1. Complete S2-T05 — admin WhatsApp diagnostics commands
+2. Complete S2-T06 — storage service and report-ready API
+3. Complete S2-T07 — recall scheduling engine
+4. Complete S2-T08 — message template registration and reminder readiness
 
 ---
 

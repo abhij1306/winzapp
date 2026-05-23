@@ -11,6 +11,9 @@ TEST_BOOKING_CONFIRMED = "{test_name} ke liye walk-in booking confirm ho gayi ha
 HOME_COLLECTION_UNKNOWN_TEST = "Is test ke liye home collection samajh nahi paaya."
 HOME_COLLECTION_UNKNOWN_SLOT = "Kripya morning slot ke liye 1 ya 2 bhejein."
 HOME_COLLECTION_CONFIRMED = "{test_name} ke liye home collection booking confirm ho gayi hai."
+REPORT_STATUS_NOT_FOUND = "Aapki koi active test booking nahi mili."
+CANCEL_BOOKING_NOT_FOUND = "Cancel karne ke liye koi active booking nahi mili."
+CANCEL_BOOKING_CONFIRMED = "{test_name} booking cancel kar di gayi hai."
 
 
 def render_category_prompt(categories: list[str]) -> str:
@@ -39,3 +42,14 @@ def render_address_prompt(requires_fasting: bool) -> str:
 
 def render_morning_slot_prompt() -> str:
     return "Morning slot choose karein:\n1. Kal 8-10 AM\n2. Kal 10-12 AM"
+
+
+def render_report_status_pending(test_name: str, status: str) -> str:
+    return (
+        f"{test_name} report abhi {status} stage mein hai. "
+        "Ready hote hi WhatsApp par bhej denge."
+    )
+
+
+def render_report_status_ready(test_name: str) -> str:
+    return f"{test_name} report ready hai. Clinic team WhatsApp par report bhej degi."

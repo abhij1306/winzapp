@@ -215,7 +215,7 @@ Address/location capture, morning slot selection, fasting flag handling, booking
 Test requirement: `tests/test_flows/test_home_collection_flow.py`.
 
 ### S2-T04: Report inquiry and cancellation flows
-- [ ] Status: pending; blocked by S2-T02
+- [x] Status: completed
 
 Support report status inquiry and soft-cancel bookings with audit log.
 
