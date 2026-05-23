@@ -30,15 +30,16 @@ Current focus: `app/services/intent_router.py` → `app/flows/test_booking_flow.
 - [x] S1-T14: Pilot seed data and Meta template registration scaffold
 - [x] S2-T01: Rule-first diagnostics intent router
 - [x] S2-T02: Diagnostics test booking walk-in flow
+- [x] S2-T03: Diagnostics home collection flow
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Complete S2-T03 — diagnostics home collection flow
-2. Complete S2-T04 — report inquiry and cancellation flows
-3. Complete S2-T05 — admin WhatsApp diagnostics commands
-4. Complete S2-T06 — storage service and report-ready API
+1. Complete S2-T04 — report inquiry and cancellation flows
+2. Complete S2-T05 — admin WhatsApp diagnostics commands
+3. Complete S2-T06 — storage service and report-ready API
+4. Complete S2-T07 — recall scheduling engine
 
 ---
 

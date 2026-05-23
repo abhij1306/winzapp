@@ -208,7 +208,7 @@ Category, test selection, confirmation, booking creation, audit, session clear.
 Test requirement: `tests/test_flows/test_test_booking_flow.py`.
 
 ### S2-T03: Diagnostics home collection flow
-- [ ] Status: pending; blocked by S2-T02
+- [x] Status: completed
 
 Address/location capture, morning slot selection, fasting flag handling, booking creation.
 
