@@ -16,6 +16,7 @@ from app.models import Patient, TestBooking
 from app.schemas.report_ready import ReportReadyData, ReportReadyRequest, ReportReadyResponse
 from app.services.audit import write_audit
 from app.services.cache import get_clinic_by_id_cached
+from app.services.recall_scheduling import maybe_create_recall_for_booking
 from app.templates.hinglish import REPORT_DELIVERY_CAPTION
 from app.utils.datetime_utils import now_ist
 
@@ -40,6 +41,7 @@ async def report_ready(
     signed_url = await storage.create_signed_url(stored_path, expires_in=86400)
     await send_report_document(clinic, patient, booking, signed_url)
     await mark_report_delivered(db, payload.clinic_id, booking, stored_path)
+    await maybe_create_recall_for_booking(db, booking)
     return ReportReadyResponse(
         data=ReportReadyData(
             booking_id=str(booking.id),

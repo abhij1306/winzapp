@@ -236,7 +236,7 @@ Upload/pass-through report PDF, create 24-hour signed URL, send WhatsApp documen
 Test requirement: `tests/test_api/test_report_ready.py`.
 
 ### S2-T07: Recall scheduling engine
-- [ ] Status: pending; blocked by S2-T06
+- [x] Status: completed
 
 Create recall schedules for HbA1c, thyroid, full body, and annual checkup rules.
 
