@@ -23,16 +23,17 @@ Current focus: `app/main.py` → `app/database.py` → `app/models/` → `migrat
 - [x] S1-T07: Redis cache service
 - [x] S1-T08: Utilities, structured logging, and audit service
 - [x] S1-T09: Feature flags and LLM service abstraction
+- [x] S1-T10: WhatsApp sender service
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Complete S1-T10 — WhatsApp sender service
-2. Complete S1-T11 — flow engine base and consent flow
-3. Complete S1-T12 — WhatsApp webhook handler
-4. Complete S1-T13 — local CI, GitHub Actions, and Railway skeleton
-5. Complete S1-T14 — pilot seed data and Meta template registration scaffold
+1. Complete S1-T11 — flow engine base and consent flow
+2. Complete S1-T12 — WhatsApp webhook handler
+3. Complete S1-T13 — local CI, GitHub Actions, and Railway skeleton
+4. Complete S1-T14 — pilot seed data and Meta template registration scaffold
+5. Start S2-T01 — rule-first diagnostics intent router
 
 ---
 

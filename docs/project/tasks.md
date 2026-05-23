@@ -125,7 +125,7 @@ Acceptance criteria:
 Test requirement: `tests/test_services/test_feature_flags.py` and `tests/test_services/test_llm_service.py`.
 
 ### S1-T10: WhatsApp sender service
-- [ ] Status: pending
+- [x] Status: completed
 
 Build async send helpers for text, list, buttons, document, and template messages.
 
