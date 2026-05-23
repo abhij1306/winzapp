@@ -44,7 +44,7 @@ Acceptance criteria:
 Test requirement: `tests/test_models/test_base_mixins.py`.
 
 ### S1-T04: SQLAlchemy models
-- [ ] Status: pending
+- [x] Status: completed
 
 Create all Pilot MVP schema models: `Clinic`, `Doctor`, `Patient`, `AppointmentSlot`, `Appointment`, `Test`, `TestBooking`, `ConversationSession`, `Message`, `FailedMessage`, `AuditLog`, `RecallSchedule`, `Review`, `Broadcast`.
 
