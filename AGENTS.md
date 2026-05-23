@@ -4,10 +4,10 @@
 ---
 
 ## ACTIVE SPRINT GOAL
-**Sprint 1 of 3 — Core Infrastructure**
-Build the foundational layer: DB schema, WhatsApp webhook, Redis cache, and conversation session engine. Nothing patient-facing works yet at end of this sprint. The goal is a deployable skeleton that receives a WhatsApp message, routes it, and responds — with every guardrail in place from Day 1.
+**Sprint 2 of 3 — Diagnostics Conversation and Report Delivery**
+Build the diagnostics patient conversation layer: intent routing, test booking, home collection, report inquiry, cancellation, admin commands, report-ready delivery, and recall scheduling. Keep routing rule-first, keep LLM fallback feature-flagged, and keep GP appointment conversation flows Post-pilot.
 
-Current focus: `app/main.py` → `app/database.py` → `app/models/` → `migrations/`
+Current focus: `app/services/intent_router.py` → `app/flows/test_booking_flow.py` → `app/flows/home_collection_flow.py`
 
 ---
 
@@ -28,12 +28,16 @@ Current focus: `app/main.py` → `app/database.py` → `app/models/` → `migrat
 - [x] S1-T12: WhatsApp webhook handler
 - [x] S1-T13: Local CI, GitHub Actions, and Railway skeleton
 - [x] S1-T14: Pilot seed data and Meta template registration scaffold
+- [x] S2-T01: Rule-first diagnostics intent router
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Start S2-T01 — rule-first diagnostics intent router
+1. Complete S2-T02 — diagnostics test booking walk-in flow
+2. Complete S2-T03 — diagnostics home collection flow
+3. Complete S2-T04 — report inquiry and cancellation flows
+4. Complete S2-T05 — admin WhatsApp diagnostics commands
 
 ---
 
@@ -98,6 +102,7 @@ app/services/feature_flags.py   require_feature(clinic_id, feature_name, db)
 
 app/services/audit.py           write_audit(db, clinic_id, action, entity_type, entity_id, diff)
                                 → called after every state-changing operation
+app/services/intent_router.py   Rule-first diagnostics intent router with feature-flagged LLM fallback
 
 app/webhooks/whatsapp.py        Entry point for ALL incoming WhatsApp messages
 

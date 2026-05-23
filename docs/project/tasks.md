@@ -194,7 +194,7 @@ Test requirement: `tests/test_scripts/test_seed_pilot.py`.
 ## Sprint 2: Diagnostics Conversation and Report Delivery
 
 ### S2-T01: Rule-first diagnostics intent router
-- [ ] Status: pending; blocked by S1-T12
+- [x] Status: completed
 
 Classify diagnostics intents: test booking, report inquiry, home collection, cancel, admin, unknown. LLM fallback is feature-flagged.
 
