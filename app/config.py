@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     jwt_secret: str = Field(default="change-me-in-local-dev", repr=False)
     jwt_access_token_minutes: int = 30
 
+    sentry_dsn: str = Field(default="", repr=False)
+    logfire_token: str = Field(default="", repr=False)
+    observability_alerts_enabled: bool = True
+    webhook_latency_alert_ms: int = 15_000
+    scheduler_heartbeat_max_age_seconds: int = 300
+
 
 @lru_cache
 def get_settings() -> Settings:

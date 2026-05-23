@@ -43,14 +43,17 @@ Current focus: Sprint 3 dashboard setup: minimal dashboard → observability
 - [x] S3-T05: Patient and test catalog APIs
 - [x] S3-T06: Failed message inbox and retry API
 - [x] S3-T07: Scheduler jobs
+- [x] S3-T08: Minimal dashboard frontend
+- [x] S3-T09: Observability and alerting
+- [x] S3-T10: Pilot launch checklist
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Build minimal dashboard
-2. Add observability and alerting
-3. Prepare pilot launch checklist
+1. Run pilot release checklist
+2. Complete deployed smoke tests
+3. Start pilot feedback capture
 
 ---
 
@@ -161,6 +164,7 @@ docs/product/traceability.md        Spec coverage map
 ### APScheduler
 - Set `timezone="Asia/Kolkata"` on the scheduler instance, not per-job. Otherwise cron jobs for 9 AM and 8 PM will fire at wrong times.
 - APScheduler **does not survive process restarts** for in-progress jobs. For the MVP this is acceptable (jobs re-check DB state on next run). Document this limitation for operations.
+- The scheduler heartbeat is written to Redis at `scheduler:heartbeat`; deleting or aging this key is the staging check for the missed-heartbeat alert.
 
 ### Multi-Tenancy
 - If you ever write a utility function that queries patients or appointments without a `clinic_id` parameter, stop and refactor. There is no legitimate reason to query across tenants.

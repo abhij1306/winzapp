@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import json
 from dataclasses import dataclass
+from time import perf_counter
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -17,10 +18,14 @@ from app.flows import ConsentFlow, FlowMessage
 from app.models import ConversationSession, FailedMessage, Message
 from app.schemas.whatsapp_webhook import WAMessage, WAWebhookPayload
 from app.services.cache import get_clinic_cached, get_session_cached
+from app.services.observability import capture_exception, record_webhook_latency
 from app.services.whatsapp_sender import send_text
+from app.utils.logger import get_logger
+from app.utils.phone import mask_phone
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 DbSession = Annotated[AsyncSession, Depends(get_db)]
+logger = get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -51,14 +56,28 @@ async def receive_whatsapp_webhook(
     request: Request,
     db: DbSession,
 ) -> dict[str, str]:
+    started_at = perf_counter()
     raw_body = await request.body()
     verify_signature(raw_body, request.headers.get("x-hub-signature-256"))
     raw_payload = json.loads(raw_body)
     payload = WAWebhookPayload.model_validate(raw_payload)
+    items = iter_incoming_messages(payload, raw_payload)
 
-    for item in iter_incoming_messages(payload, raw_payload):
+    for item in items:
         await process_incoming_message(item, raw_payload, db)
 
+    duration_ms = (perf_counter() - started_at) * 1000
+    settings = get_settings()
+    record_webhook_latency(
+        duration_ms,
+        message_count=len(items),
+        threshold_ms=getattr(settings, "webhook_latency_alert_ms", 15_000),
+    )
+    logger.info(
+        "webhook.processed",
+        duration_ms=round(duration_ms, 2),
+        message_count=len(items),
+    )
     return {"status": "ok"}
 
 
@@ -118,6 +137,7 @@ async def process_incoming_message(
     db: AsyncSession,
 ) -> None:
     if await message_already_processed(db, item.wa_message_id):
+        logger.info("webhook.duplicate", wa_message_id=item.wa_message_id)
         return
 
     clinic = await get_clinic_cached(item.phone_number_id, db)
@@ -146,6 +166,12 @@ async def process_incoming_message(
             response,
         )
     except Exception as exc:
+        capture_exception(
+            exc,
+            clinic_id=item.clinic_id,
+            wa_message_id=item.wa_message_id,
+            patient_wa=mask_phone(item.whatsapp_number),
+        )
         await write_failed_message(db, item.clinic_id, item, raw_payload, str(exc))
 
 
@@ -179,6 +205,13 @@ async def log_inbound_message(db: AsyncSession, item: IncomingWhatsAppMessage) -
         ),
     )
     await db.commit()
+    logger.info(
+        "webhook.inbound_logged",
+        clinic_id=item.clinic_id,
+        wa_message_id=item.wa_message_id,
+        message_type=item.message_type,
+        patient_wa=mask_phone(item.whatsapp_number),
+    )
 
 
 async def load_session_for_flow(
@@ -215,6 +248,13 @@ async def write_failed_message(
         ),
     )
     await db.commit()
+    logger.warning(
+        "webhook.failed_message_written",
+        clinic_id=clinic_id,
+        wa_message_id=item.wa_message_id,
+        patient_wa=mask_phone(item.whatsapp_number),
+        error=error,
+    )
 
 
 async def rollback_quietly(db: AsyncSession) -> None:

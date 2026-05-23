@@ -14,6 +14,8 @@ from app.config import get_settings
 from app.models import Clinic, Patient, RecallSchedule, Test, TestBooking
 from app.services.cache import redis_get
 from app.services.scheduler import (
+    HEARTBEAT_KEY,
+    check_scheduler_heartbeat_freshness,
     create_scheduler,
     send_daily_digests,
     send_fasting_reminders,
@@ -220,4 +222,31 @@ async def test_scheduler_heartbeat_and_registration(redis_client: Redis) -> None
         "recall-reminders",
         "daily-digest",
         "scheduler-heartbeat",
+        "scheduler-heartbeat-alert",
     }
+
+
+@pytest.mark.asyncio
+async def test_scheduler_heartbeat_alerts_when_missing(
+    redis_client: Redis,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    alerts: list[tuple[str, str]] = []
+
+    def fake_alert(alert_type: str, message: str, **_fields: object) -> None:
+        alerts.append((alert_type, message))
+
+    monkeypatch.setattr("app.services.scheduler.emit_alert", fake_alert)
+
+    is_fresh = await check_scheduler_heartbeat_freshness()
+
+    assert is_fresh is False
+    assert alerts == [("scheduler_heartbeat_missed", "Scheduler heartbeat is missing.")]
+
+
+@pytest.mark.asyncio
+async def test_scheduler_heartbeat_detects_fresh_key(redis_client: Redis) -> None:
+    await write_scheduler_heartbeat()
+
+    assert await redis_client.exists(HEARTBEAT_KEY) == 1
+    assert await check_scheduler_heartbeat_freshness(max_age_seconds=300) is True

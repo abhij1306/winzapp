@@ -301,21 +301,21 @@ Implement fasting reminders, review requests, recall reminders, daily digest, an
 Test requirement: `tests/test_scheduler/test_scheduler_jobs.py`.
 
 ### S3-T08: Minimal dashboard frontend
-- [ ] Status: pending; blocked by S3-T01..S3-T06
+- [x] Status: completed
 
 Build OTP login, overview, test bookings, pending reports/upload, failed messages/retry, and settings pages.
 
 Test requirement: component tests plus one browser smoke path.
 
 ### S3-T09: Observability and alerting
-- [ ] Status: pending; blocked by S3-T07
+- [x] Status: completed
 
 Add Sentry/Logfire wiring, structured log fields, webhook latency alert, WA delivery failure alert, missed scheduler heartbeat alert.
 
 Test requirement: config smoke tests and manual alert checklist.
 
 ### S3-T10: Pilot launch checklist
-- [ ] Status: pending; blocked by all S1-S3 tasks
+- [x] Status: completed
 
 Run local CI, deployed smoke tests, WhatsApp round trip, idempotency test, report delivery test, failed-message retry test, and RLS isolation test.
 

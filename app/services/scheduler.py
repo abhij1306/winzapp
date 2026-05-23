@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import timedelta
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore[import-untyped]
@@ -13,10 +13,12 @@ from app.config import get_settings
 from app.database import SessionLocal
 from app.flows.admin_flow import PENDING_REPORT_STATUSES
 from app.models import Clinic, Patient, RecallSchedule, Test, TestBooking
-from app.services.cache import redis_set_json
+from app.services.cache import loads_dict, redis_get, redis_set_json
+from app.services.observability import emit_alert
 from app.utils.datetime_utils import now_ist
 
 HEARTBEAT_KEY = "scheduler:heartbeat"
+HEARTBEAT_TTL_SECONDS = 5 * 60
 TEMPLATE_LANGUAGE = "en_US"
 REVIEW_SENT_MARKER = "review_request_sent=true"
 
@@ -28,6 +30,12 @@ def create_scheduler() -> AsyncIOScheduler:
     scheduler.add_job(run_recall_reminders_job, "cron", hour=9, minute=30, id="recall-reminders")
     scheduler.add_job(run_daily_digest_job, "cron", hour=9, minute=0, id="daily-digest")
     scheduler.add_job(run_scheduler_heartbeat_job, "interval", minutes=1, id="scheduler-heartbeat")
+    scheduler.add_job(
+        run_scheduler_heartbeat_alert_job,
+        "interval",
+        minutes=5,
+        id="scheduler-heartbeat-alert",
+    )
     return scheduler
 
 
@@ -53,6 +61,10 @@ async def run_daily_digest_job() -> None:
 
 async def run_scheduler_heartbeat_job() -> None:
     await write_scheduler_heartbeat()
+
+
+async def run_scheduler_heartbeat_alert_job() -> None:
+    await check_scheduler_heartbeat_freshness()
 
 
 async def send_fasting_reminders(db: AsyncSession) -> int:
@@ -160,7 +172,33 @@ async def send_daily_digests(db: AsyncSession) -> int:
 
 
 async def write_scheduler_heartbeat() -> None:
-    await redis_set_json(HEARTBEAT_KEY, 5 * 60, {"seen_at": now_ist().isoformat()})
+    await redis_set_json(HEARTBEAT_KEY, HEARTBEAT_TTL_SECONDS, {"seen_at": now_ist().isoformat()})
+
+
+async def check_scheduler_heartbeat_freshness(max_age_seconds: int | None = None) -> bool:
+    raw_heartbeat = await redis_get(HEARTBEAT_KEY)
+    if raw_heartbeat is None:
+        emit_alert(
+            "scheduler_heartbeat_missed",
+            "Scheduler heartbeat is missing.",
+            heartbeat_key=HEARTBEAT_KEY,
+        )
+        return False
+
+    payload = loads_dict(raw_heartbeat)
+    seen_at = datetime.fromisoformat(str(payload["seen_at"]))
+    limit_seconds = max_age_seconds or get_settings().scheduler_heartbeat_max_age_seconds
+    age_seconds = (now_ist() - seen_at).total_seconds()
+    if age_seconds <= limit_seconds:
+        return True
+
+    emit_alert(
+        "scheduler_heartbeat_stale",
+        "Scheduler heartbeat is stale.",
+        age_seconds=round(age_seconds, 2),
+        max_age_seconds=limit_seconds,
+    )
+    return False
 
 
 async def daily_stats(db: AsyncSession, clinic_id: str) -> dict[str, int]:

@@ -2,6 +2,8 @@ from typing import cast
 
 import httpx
 
+from app.services import observability
+
 WA_API_URL = "https://graph.facebook.com/v18.0/{phone_number_id}/messages"
 
 
@@ -142,6 +144,11 @@ async def post_message(
         )
 
     if response.status_code >= 400:
+        observability.record_wa_delivery_failure(
+            phone_number_id,
+            response.status_code,
+            response.text,
+        )
         raise WADeliveryError(f"WhatsApp delivery failed: {response.text}")
 
     return cast(dict[str, object], response.json())
