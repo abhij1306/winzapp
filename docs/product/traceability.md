@@ -52,12 +52,12 @@ This file proves that the archived spec has not been lost. Every major requireme
 | `GET /api/v1/clinics/{id}/patients` | API-006 | Pilot MVP | S3-T05 |
 | `GET /api/v1/clinics/{id}/patients/{patient_id}` | API-006 | Pilot MVP | S3-T05 |
 | `PUT /api/v1/clinics/{id}/patients/{patient_id}` | API-006 | Pilot MVP | S3-T05 |
-| `GET /api/v1/clinics/{id}/tests` | API-007 | Pilot MVP | S3-T06 |
-| `POST /api/v1/clinics/{id}/tests` | API-007 | Pilot MVP | S3-T06 |
-| `PUT /api/v1/clinics/{id}/tests/{test_id}` | API-007 | Pilot MVP | S3-T06 |
-| `DELETE /api/v1/clinics/{id}/tests/{test_id}` | API-007 | Pilot MVP | S3-T06 |
-| `GET /api/v1/clinics/{id}/failed-messages` | API-008 | Pilot MVP | S3-T07 |
-| `POST /api/v1/clinics/{id}/failed-messages/{id}/retry` | API-008 | Pilot MVP | S3-T07 |
+| `GET /api/v1/clinics/{id}/tests` | API-007 | Pilot MVP | S3-T05 |
+| `POST /api/v1/clinics/{id}/tests` | API-007 | Pilot MVP | S3-T05 |
+| `PUT /api/v1/clinics/{id}/tests/{test_id}` | API-007 | Pilot MVP | S3-T05 |
+| `DELETE /api/v1/clinics/{id}/tests/{test_id}` | API-007 | Pilot MVP | S3-T05 |
+| `GET /api/v1/clinics/{id}/failed-messages` | API-008 | Pilot MVP | S3-T06 |
+| `POST /api/v1/clinics/{id}/failed-messages/{id}/retry` | API-008 | Pilot MVP | S3-T06 |
 | `GET /api/v1/clinics/{id}/stats` | API-009 | Pilot MVP | S3-T08 |
 | Appointment endpoints | API-010 | Post-pilot | Backlog |
 | Slot endpoints | API-011 | Post-pilot | Backlog |

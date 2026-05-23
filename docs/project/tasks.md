@@ -280,7 +280,7 @@ Dashboard upload path for report PDF delivery.
 Test requirement: `tests/test_api/test_report_upload.py`.
 
 ### S3-T05: Patient and test catalog APIs
-- [ ] Status: pending; blocked by S3-T01
+- [x] Status: completed
 
 Pilot dashboard support for patients and test catalog maintenance.
 
