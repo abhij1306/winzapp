@@ -179,7 +179,7 @@ Acceptance criteria:
 Test requirement: CI workflow dry-run where possible plus health test.
 
 ### S1-T14: Pilot seed data and Meta template registration scaffold
-- [ ] Status: pending
+- [x] Status: completed
 
 Create idempotent seed scripts for the pilot diagnostics clinic and test catalog, plus a scaffold for Meta template registration.
 

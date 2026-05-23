@@ -27,13 +27,13 @@ Current focus: `app/main.py` → `app/database.py` → `app/models/` → `migrat
 - [x] S1-T11: Flow engine base and consent flow
 - [x] S1-T12: WhatsApp webhook handler
 - [x] S1-T13: Local CI, GitHub Actions, and Railway skeleton
+- [x] S1-T14: Pilot seed data and Meta template registration scaffold
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Complete S1-T14 — pilot seed data and Meta template registration scaffold
-2. Start S2-T01 — rule-first diagnostics intent router
+1. Start S2-T01 — rule-first diagnostics intent router
 
 ---
 
