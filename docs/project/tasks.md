@@ -252,7 +252,7 @@ Test requirement: dry-run template payload validation.
 ## Sprint 3: Automation, Dashboard, and Pilot Launch
 
 ### S3-T01: OTP auth API
-- [ ] Status: pending; blocked by S1-T10
+- [x] Status: completed
 
 Implement owner OTP send/verify and short-lived JWT.
 

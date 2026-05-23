@@ -17,6 +17,7 @@ HOME_COLLECTION_CONFIRMED = "{test_name} ke liye home collection booking confirm
 REPORT_STATUS_NOT_FOUND = "Aapki koi active test booking nahi mili."
 CANCEL_BOOKING_NOT_FOUND = "Cancel karne ke liye koi active booking nahi mili."
 CANCEL_BOOKING_CONFIRMED = "{test_name} booking cancel kar di gayi hai."
+OTP_LOGIN_MESSAGE = "Aapka Winzapp login OTP {otp} hai. Ye 5 minutes ke liye valid hai."
 ADMIN_UNAUTHORIZED = "Ye command sirf clinic owner ke liye available hai."
 ADMIN_UNKNOWN_COMMAND = "Admin command samajh nahi paaya."
 ADMIN_REPORT_NOT_FOUND = "Ready report nahi mili. Pehle report upload/ready karein."

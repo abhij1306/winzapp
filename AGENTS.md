@@ -7,7 +7,7 @@
 **Sprint 3 of 3 — Automation, Dashboard, and Pilot Launch**
 Build owner authentication, operational APIs, scheduler jobs, dashboard workflows, observability, and the pilot launch checklist. Keep the dashboard minimal and operations-focused for the diagnostics pilot.
 
-Current focus: Sprint 3 API setup: `app/api/v1/auth.py` → `app/api/v1/clinic_settings.py`
+Current focus: Sprint 3 API setup: `app/api/v1/clinic_settings.py` → `app/api/v1/test_bookings.py`
 
 ---
 
@@ -36,15 +36,16 @@ Current focus: Sprint 3 API setup: `app/api/v1/auth.py` → `app/api/v1/clinic_s
 - [x] S2-T06: Storage service and report-ready API
 - [x] S2-T07: Recall scheduling engine
 - [x] S2-T08: Message template registration and reminder readiness
+- [x] S3-T01: OTP auth API
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Start Sprint 3 with OTP auth API
-2. Build clinic settings API
-3. Build test booking operations API
-4. Build pending reports upload API
+1. Build clinic settings API
+2. Build test booking operations API
+3. Build pending reports upload API
+4. Build patient and test catalog APIs
 
 ---
 
