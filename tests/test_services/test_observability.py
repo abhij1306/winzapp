@@ -1,16 +1,18 @@
 from types import SimpleNamespace
 
+from pytest import MonkeyPatch
+
 from app.services import observability
 
 
-def test_configure_observability_initializes_enabled_providers(monkeypatch) -> None:
+def test_configure_observability_initializes_enabled_providers(monkeypatch: MonkeyPatch) -> None:
     sentry_calls: list[dict[str, object]] = []
     logfire_calls: list[dict[str, object]] = []
 
     sentry = SimpleNamespace(init=lambda **kwargs: sentry_calls.append(kwargs))
     logfire = SimpleNamespace(configure=lambda **kwargs: logfire_calls.append(kwargs))
 
-    def fake_import(module_name: str):
+    def fake_import(module_name: str) -> SimpleNamespace | None:
         return {"sentry_sdk": sentry, "logfire": logfire}.get(module_name)
 
     monkeypatch.setattr(observability, "import_optional", fake_import)
@@ -30,7 +32,7 @@ def test_configure_observability_initializes_enabled_providers(monkeypatch) -> N
     assert logfire_calls[0]["service_name"] == "WhatsApp Clinic Suite"
 
 
-def test_record_webhook_latency_emits_threshold_alert(monkeypatch) -> None:
+def test_record_webhook_latency_emits_threshold_alert(monkeypatch: MonkeyPatch) -> None:
     alerts: list[dict[str, object]] = []
 
     def fake_alert(alert_type: str, message: str, **fields: object) -> None:
@@ -51,7 +53,7 @@ def test_record_webhook_latency_emits_threshold_alert(monkeypatch) -> None:
     ]
 
 
-def test_emit_alert_respects_disabled_alerts(monkeypatch) -> None:
+def test_emit_alert_respects_disabled_alerts(monkeypatch: MonkeyPatch) -> None:
     warnings: list[tuple[object, ...]] = []
 
     monkeypatch.setattr(
@@ -59,7 +61,11 @@ def test_emit_alert_respects_disabled_alerts(monkeypatch) -> None:
         "get_settings",
         lambda: SimpleNamespace(observability_alerts_enabled=False),
     )
-    monkeypatch.setattr(observability.logger, "warning", lambda *args, **_kwargs: warnings.append(args))
+    monkeypatch.setattr(
+        observability.logger,
+        "warning",
+        lambda *args, **_kwargs: warnings.append(args),
+    )
 
     observability.emit_alert("wa_delivery_failure", "Delivery failed.")
 

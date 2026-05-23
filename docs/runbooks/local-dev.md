@@ -5,6 +5,7 @@
 ```bash
 cp .env.example .env
 docker compose up -d postgres redis
+docker compose ps
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
@@ -14,6 +15,7 @@ python -m venv .venv
 ```
 
 Use the project `.venv` for all local Python commands. Do not install project dependencies globally.
+Compose retains PostgreSQL data in `postgres_data`; Redis has no data volume because cached values can be rebuilt from PostgreSQL.
 
 ## Required Environment
 

@@ -177,10 +177,16 @@ docs/product/traceability.md        Spec coverage map
 ### Local Docker
 - Docker Compose is the supported local Postgres/Redis path, but tests cannot start services if Docker Desktop's Linux engine is not running. Start Docker Desktop before running the full local CI path.
 - Local Compose PostgreSQL uses host port `55432`, not `5432`, to avoid connecting tests to a different local Postgres installation.
+- Local Compose intentionally persists PostgreSQL only. Redis is an ephemeral cache; do not add a Redis volume unless its source-of-truth role is deliberately changed.
 
 ### CI/CD Config
 - Quote the GitHub Actions `"on"` key if tests parse workflow YAML with PyYAML; unquoted `on` is treated as boolean YAML 1.1 by PyYAML.
 - Quote `"$schema"` in `railway.toml`; TOML bare keys cannot start with `$`.
+
+### Runtime Integration
+- `app/webhooks/whatsapp.py` currently invokes `ConsentFlow` directly. The diagnostics booking, home collection, report inquiry, and cancellation flow modules are implemented, but do not assume inbound messages route to them until wiring is verified or added.
+- `app/services/scheduler.py` defines APScheduler jobs, but `app/main.py` currently does not create or start a scheduler instance. Starting Uvicorn alone will not produce the `scheduler:heartbeat` key.
+- `Settings.api_v1_prefix` exists, but `app/api/v1/__init__.py` currently mounts the router with a literal `"/api/v1"` prefix. Changing the environment setting alone will not move API routes.
 
 ---
 
