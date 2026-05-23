@@ -14,18 +14,17 @@ Current focus: `app/main.py` → `app/database.py` → `app/models/` → `migrat
 ## SYSTEM STATE
 
 ### ✅ Completed
-*(nothing yet — update this as tasks are marked done in docs/project/tasks.md)*
+- [x] S1-T01: Project scaffolding, config, and local services
 
 ### 🔄 In Progress
-- [ ] Project scaffolding: FastAPI app init, folder structure, requirements.txt
 - [ ] Alembic + SQLAlchemy 2.0 async setup
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Complete S1-T01 — FastAPI scaffold, config, health endpoint, Docker Compose local Postgres/Redis
-2. Complete S1-T02 — SQLAlchemy async database setup and Alembic env
-3. Complete S1-T03 — `app/models/base.py` TimestampMixin + SoftDeleteMixin
-4. Complete S1-T04 — all 14 SQLAlchemy models from docs/architecture/data-model.md
-5. Complete S1-T05 — initial Alembic migration with triggers, indexes, and RLS
+1. Complete S1-T02 — SQLAlchemy async database setup and Alembic env
+2. Complete S1-T03 — `app/models/base.py` TimestampMixin + SoftDeleteMixin
+3. Complete S1-T04 — all 14 SQLAlchemy models from docs/architecture/data-model.md
+4. Complete S1-T05 — initial Alembic migration with triggers, indexes, and RLS
+5. Complete S1-T06 — common and WhatsApp Pydantic schemas
 
 ---
 
@@ -139,6 +138,12 @@ docs/product/traceability.md        Spec coverage map
 ### Multi-Tenancy
 - If you ever write a utility function that queries patients or appointments without a `clinic_id` parameter, stop and refactor. There is no legitimate reason to query across tenants.
 - The `UNIQUE(clinic_id, whatsapp_number)` constraint on patients means the same phone number CAN exist in multiple clinics. This is intentional — same patient, different clinics.
+
+### Python Import Path
+- Keep `pytest.ini` with `pythonpath = .`. Without it, Python may import an unrelated `app` package from another workspace path instead of this repo's local `app/` package.
+
+### Local Docker
+- Docker Compose is the supported local Postgres/Redis path, but tests cannot start services if Docker Desktop's Linux engine is not running. Start Docker Desktop before running the full local CI path.
 
 ---
 

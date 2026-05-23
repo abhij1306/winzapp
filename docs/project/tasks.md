@@ -5,7 +5,7 @@ Canonical execution board. One task should fit one focused Codex session and one
 ## Sprint 1: Core Infrastructure
 
 ### S1-T01: Project scaffolding, config, and local services
-- [ ] Status: pending
+- [x] Status: completed
 
 Build FastAPI app shell, settings, health endpoint, Docker Compose local Postgres/Redis, base test config, lint/type config, and `.env.example`.
 
