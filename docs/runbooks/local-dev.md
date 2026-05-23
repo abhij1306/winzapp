@@ -5,11 +5,15 @@
 ```bash
 cp .env.example .env
 docker compose up -d postgres redis
-pip install -r requirements.txt
-alembic upgrade head
-python scripts/seed_pilot.py
-uvicorn app.main:app --reload --port 8000
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m alembic upgrade head
+.\.venv\Scripts\python.exe scripts/seed_pilot.py
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 ```
+
+Use the project `.venv` for all local Python commands. Do not install project dependencies globally.
 
 ## Required Environment
 
