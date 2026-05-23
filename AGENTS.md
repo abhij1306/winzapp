@@ -4,10 +4,10 @@
 ---
 
 ## ACTIVE SPRINT GOAL
-**Sprint 2 of 3 — Diagnostics Conversation and Report Delivery**
-Build the diagnostics patient conversation layer: intent routing, test booking, home collection, report inquiry, cancellation, admin commands, report-ready delivery, and recall scheduling. Keep routing rule-first, keep LLM fallback feature-flagged, and keep GP appointment conversation flows Post-pilot.
+**Sprint 3 of 3 — Automation, Dashboard, and Pilot Launch**
+Build owner authentication, operational APIs, scheduler jobs, dashboard workflows, observability, and the pilot launch checklist. Keep the dashboard minimal and operations-focused for the diagnostics pilot.
 
-Current focus: `scripts/register_meta_templates.py` → `docs/runbooks/meta-templates.md` → Sprint 3 API setup
+Current focus: Sprint 3 API setup: `app/api/v1/auth.py` → `app/api/v1/clinic_settings.py`
 
 ---
 
@@ -35,15 +35,16 @@ Current focus: `scripts/register_meta_templates.py` → `docs/runbooks/meta-temp
 - [x] S2-T05: Admin WhatsApp diagnostics commands
 - [x] S2-T06: Storage service and report-ready API
 - [x] S2-T07: Recall scheduling engine
+- [x] S2-T08: Message template registration and reminder readiness
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Complete S2-T08 — message template registration and reminder readiness
-2. Prepare Sprint 3 OTP auth API
-3. Prepare Sprint 3 clinic settings API
-4. Prepare Sprint 3 test booking operations API
+1. Start Sprint 3 with OTP auth API
+2. Build clinic settings API
+3. Build test booking operations API
+4. Build pending reports upload API
 
 ---
 

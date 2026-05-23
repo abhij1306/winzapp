@@ -243,7 +243,7 @@ Create recall schedules for HbA1c, thyroid, full body, and annual checkup rules.
 Test requirement: `tests/test_services/test_recall_scheduling.py`.
 
 ### S2-T08: Message template registration and reminder readiness
-- [ ] Status: pending; blocked by S1-T14
+- [x] Status: completed
 
 Prepare Meta templates for fasting reminders, recall reminders, review requests, and daily digest.
 

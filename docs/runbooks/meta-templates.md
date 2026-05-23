@@ -10,10 +10,12 @@ Dry-run first:
 
 The scaffold covers:
 
-- `fasting_reminder`
-- `report_ready`
-- `recall_reminder`
-- `review_request`
-- `daily_digest`
+- `fasting_reminder` — `UTILITY`
+- `report_ready` — `UTILITY`
+- `recall_reminder` — `MARKETING`
+- `review_request` — `MARKETING`
+- `daily_digest` — `UTILITY`, with Meta body examples for `{{1}}`, `{{2}}`, and `{{3}}`
 
-Real registration must use a valid WABA ID and Meta access token. Do not call Meta from automated tests.
+Dry-run validates payload shape locally, including duplicate names, allowed categories, a single `BODY`
+component, and examples for variable templates. Real registration must use a valid WABA ID and Meta
+access token. Do not call Meta from automated tests.
