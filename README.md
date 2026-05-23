@@ -2,7 +2,9 @@
 
 Winzapp is a WhatsApp-first diagnostics clinic operations suite. Patients use WhatsApp for consent and diagnostics interactions; clinic owners use a small web dashboard for bookings, reports, failed-message recovery, catalog maintenance, and settings.
 
-**Pilot status:** the three implementation sprints are recorded complete in the project task board. The next gates are the pilot release checklist, deployed smoke tests, and pilot feedback capture.
+**Pilot status:** implementation and local pilot-readiness hardening are complete. The remaining
+gates require external pilot configuration: Meta/Supabase credentials, approved templates,
+public webhook smoke testing, and deployed smoke tests.
 
 Winzapp handles operational workflows only. It is not clinical decision support, an EMR, a prescription system, or a patient portal.
 
@@ -17,7 +19,7 @@ Implemented surfaces:
 | Owner API | OTP authentication, clinic settings, test bookings, report upload, patients, catalog, and failed-message retry |
 | Dashboard | Operations-focused React interface for the owner API |
 | Automation services | Fasting reminders, recalls, review requests, daily digest, heartbeat, and alerts |
-| Operations | PostgreSQL/Redis health checks, structured logs, optional Sentry/Logfire, Railway deployment configuration |
+| Operations | PostgreSQL/Redis/scheduler health checks, structured logs, optional Sentry/Logfire, Railway deployment configuration |
 
 The pilot intentionally excludes GP appointment chat flows, online payments, broadcasts, automated onboarding, password-protected PDFs, and multi-replica scheduling. See [docs/product/mvp-scope.md](docs/product/mvp-scope.md) for the full boundary.
 
@@ -69,7 +71,8 @@ Run these commands from the repository root in PowerShell.
      "status": "ok",
      "checks": {
        "database": "ok",
-       "redis": "ok"
+       "redis": "ok",
+       "scheduler": "ok"
      }
    }
    ```
@@ -124,16 +127,20 @@ Automated tests mock calls to Meta, Groq, and Supabase. Real credentials are nee
 
 | Route group | Path | Notes |
 | --- | --- | --- |
-| Health | `GET /health` | Reports database and Redis readiness |
+| Health | `GET /health` | Reports database, Redis, and scheduler heartbeat readiness |
 | WhatsApp webhook | `GET/POST /webhooks/whatsapp` | Meta verification and inbound delivery |
 | Authentication | `POST /api/v1/auth/otp/send`, `POST /api/v1/auth/otp/verify` | Owner OTP login |
 | Clinic settings | `/api/v1/clinics/{clinic_id}` | Owner-authenticated settings reads and updates |
 | Test bookings | `/api/v1/clinics/{clinic_id}/test-bookings` | List, create, update, and soft-delete bookings |
 | Report upload | `/api/v1/clinics/{clinic_id}/test-bookings/{booking_id}/report-upload` | Dashboard PDF delivery path |
+| Report-ready trigger | `POST /api/v1/report-ready` | Owner-authenticated PDF URL/base64 delivery trigger |
 | Patients and catalog | `/api/v1/clinics/{clinic_id}/patients`, `/api/v1/clinics/{clinic_id}/tests` | Dashboard maintenance |
 | Failed messages | `/api/v1/clinics/{clinic_id}/failed-messages` | Dead-letter list and retry |
 
-Protected clinic operations use the bearer access token returned by OTP verification. All tenant operations are scoped by `clinic_id`.
+Protected clinic operations, including `POST /api/v1/report-ready`, use the bearer access
+token returned by OTP verification. All patient and booking operations establish
+`app.clinic_id` before tenant access and clear it before returning a pooled database
+connection.
 
 ### Request Flow
 
@@ -150,12 +157,19 @@ Incoming WhatsApp messages must preserve this processing order: verify signature
 
 ## Pilot Readiness Notes
 
-The release checklist is still outstanding. Two runtime wiring points must be verified or resolved before relying on end-to-end pilot automation:
+The release checklist is still outstanding. Runtime wiring required for pilot verification is now enabled:
 
-- `app/webhooks/whatsapp.py` currently invokes `ConsentFlow` directly; confirm routing into the implemented diagnostics booking, collection, inquiry, and cancellation flows.
-- `app/services/scheduler.py` defines the APScheduler jobs, but `app/main.py` does not start a scheduler instance; starting the API alone does not establish `scheduler:heartbeat`.
+- Incoming WhatsApp and failed-message replay paths enforce consent, resume active sessions, and route opted-in diagnostics requests or owner commands into the implemented flows.
+- API startup creates the in-process APScheduler instance and immediately writes `scheduler:heartbeat`; scheduled patient operations execute within a single clinic scope.
+- Dashboard OTP requests match the strict backend schema, and report-ready document delivery requires an authenticated owner token.
+- Automatic report delivery is rejected for patients who opted out; clinic staff must share those reports manually.
+- Request validation failures use the documented API error envelope without reflecting submitted values.
+- The webhook resolves the clinic before tenant-scoped idempotency checks, preserving RLS-safe message access.
 
-These are deployment blockers for a fully automated pilot, not prerequisites for exploring the dashboard or running the existing automated tests.
+Keep one backend web replica while APScheduler runs in-process. Before sending real pilot
+traffic, replace the seeded `settings.wa_phone_number_id` placeholder with the Meta phone
+number ID, configure external credentials, approve any required templates, and complete the
+release checklist and smoke tests.
 
 ## Development And Verification
 

@@ -154,6 +154,7 @@ docs/product/traceability.md        Spec coverage map
 
 ### PostgreSQL / Supabase
 - Supabase RLS requires `SET app.clinic_id = '...'` **before** your query in the same transaction. Use a FastAPI middleware or dependency to set this at request start.
+- Request handlers that commit more than once retain `app.clinic_id` for the database session and clear it before the pooled connection is returned; `SET LOCAL` alone is insufficient for these flows.
 - `gen_random_uuid()` requires `pgcrypto` extension. Enable with: `CREATE EXTENSION IF NOT EXISTS pgcrypto;`
 - Supabase Storage signed URLs expire. Default: 1 hour. For WhatsApp report delivery, set 24-hour expiry (`expires_in=86400`) — patients sometimes open the message hours later.
 
@@ -165,10 +166,12 @@ docs/product/traceability.md        Spec coverage map
 - Set `timezone="Asia/Kolkata"` on the scheduler instance, not per-job. Otherwise cron jobs for 9 AM and 8 PM will fire at wrong times.
 - APScheduler **does not survive process restarts** for in-progress jobs. For the MVP this is acceptable (jobs re-check DB state on next run). Document this limitation for operations.
 - The scheduler heartbeat is written to Redis at `scheduler:heartbeat`; deleting or aging this key is the staging check for the missed-heartbeat alert.
+- Scheduled patient and booking sends execute one clinic at a time with `app.clinic_id` set in the job transaction. Do not reintroduce cross-tenant scheduler queries.
 
 ### Multi-Tenancy
 - If you ever write a utility function that queries patients or appointments without a `clinic_id` parameter, stop and refactor. There is no legitimate reason to query across tenants.
 - The `UNIQUE(clinic_id, whatsapp_number)` constraint on patients means the same phone number CAN exist in multiple clinics. This is intentional — same patient, different clinics.
+- `conversation_sessions` also has one row per `(clinic_id, whatsapp_number)`. A completed consent session must be reused for later diagnostic flows rather than inserting a new row.
 
 ### Python Import Path
 - Keep `pytest.ini` with `pythonpath = .`. Without it, Python may import an unrelated `app` package from another workspace path instead of this repo's local `app/` package.
@@ -184,8 +187,10 @@ docs/product/traceability.md        Spec coverage map
 - Quote `"$schema"` in `railway.toml`; TOML bare keys cannot start with `$`.
 
 ### Runtime Integration
-- `app/webhooks/whatsapp.py` currently invokes `ConsentFlow` directly. The diagnostics booking, home collection, report inquiry, and cancellation flow modules are implemented, but do not assume inbound messages route to them until wiring is verified or added.
-- `app/services/scheduler.py` defines APScheduler jobs, but `app/main.py` currently does not create or start a scheduler instance. Starting Uvicorn alone will not produce the `scheduler:heartbeat` key.
+- Incoming WhatsApp and failed-message retry paths use the shared runtime flow dispatcher for consent, owner commands, and diagnostics flows.
+- `app/main.py` starts the in-process APScheduler instance during application lifespan and writes `scheduler:heartbeat` on startup. Keep one backend replica for the MVP scheduler model.
+- `POST /api/v1/report-ready` is owner-authenticated because it sends patient report documents; LIMS-specific machine authentication remains outside this pilot.
+- Automated report delivery paths must reject patients with `opt_in=False`; staff use manual sharing after opt-out.
 - `Settings.api_v1_prefix` exists, but `app/api/v1/__init__.py` currently mounts the router with a literal `"/api/v1"` prefix. Changing the environment setting alone will not move API routes.
 
 ---

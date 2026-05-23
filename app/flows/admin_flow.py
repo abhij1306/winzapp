@@ -16,6 +16,7 @@ from app.models import ConversationSession, Patient, TestBooking
 from app.services.audit import write_audit
 from app.services.cache import get_clinic_by_id_cached
 from app.templates.hinglish import (
+    ADMIN_PATIENT_OPTED_OUT,
     ADMIN_REPORT_NOT_FOUND,
     ADMIN_REPORT_SENT,
     ADMIN_UNAUTHORIZED,
@@ -141,6 +142,8 @@ async def handle_send_report(
     patient = await find_patient_by_id(message, db, booking.patient_id)
     if patient is None:
         return ADMIN_REPORT_NOT_FOUND
+    if not patient.opt_in:
+        return ADMIN_PATIENT_OPTED_OUT
 
     await send_report_document(clinic, patient, booking)
     booking.status = "delivered"

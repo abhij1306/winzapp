@@ -125,6 +125,26 @@ async def test_send_otp_unknown_owner_returns_error_envelope(
 
 
 @pytest.mark.asyncio
+async def test_send_otp_validation_error_returns_error_envelope(
+    redis_client: Redis,
+    api_client: httpx.AsyncClient,
+) -> None:
+    response = await api_client.post(
+        "/api/v1/auth/otp/send",
+        json={"owner_whatsapp": "+919000000003", "clinic_id": "unexpected"},
+    )
+
+    body = response.json()
+
+    assert response.status_code == 422
+    assert body["error"]["code"] == "REQUEST_VALIDATION_ERROR"
+    assert body["error"]["message"] == "Request validation failed."
+    assert body["error"]["details"]["errors"]
+    assert body["error"]["request_id"]
+    assert "unexpected" not in str(body)
+
+
+@pytest.mark.asyncio
 async def test_verify_otp_returns_short_lived_bearer_token(
     db_session: AsyncSession,
     redis_client: Redis,

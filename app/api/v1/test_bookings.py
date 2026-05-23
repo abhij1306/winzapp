@@ -5,13 +5,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Query
 from fastapi.responses import JSONResponse
-from sqlalchemy import func, select, text
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.api.auth_context import CurrentOwner, authenticate_owner
 from app.api.errors import error_response
-from app.database import get_db
+from app.database import get_db, set_tenant_context
 from app.models import Clinic, Patient, Test, TestBooking
 from app.schemas.common import PaginatedResponse, PaginationMeta
 from app.schemas.test_booking import (
@@ -157,10 +157,7 @@ async def authorize_request(
     clinic = await find_owner_clinic(db, clinic_id, owner)
     if clinic is None:
         return error_response(404, "CLINIC_NOT_FOUND", "Clinic was not found.")
-    await db.execute(
-        text("SELECT set_config('app.clinic_id', :clinic_id, true)"),
-        {"clinic_id": clinic_id},
-    )
+    await set_tenant_context(db, clinic_id)
     return owner
 
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import app.services.whatsapp_sender as whatsapp_sender
 from app.config import get_settings
-from app.database import SessionLocal
+from app.database import SessionLocal, clear_tenant_context, set_tenant_context
 from app.flows.admin_flow import PENDING_REPORT_STATUSES
 from app.models import Clinic, Patient, RecallSchedule, Test, TestBooking
 from app.services.cache import loads_dict, redis_get, redis_set_json
@@ -21,6 +21,7 @@ HEARTBEAT_KEY = "scheduler:heartbeat"
 HEARTBEAT_TTL_SECONDS = 5 * 60
 TEMPLATE_LANGUAGE = "en_US"
 REVIEW_SENT_MARKER = "review_request_sent=true"
+TenantJob = Callable[[AsyncSession, str], Awaitable[int]]
 
 
 def create_scheduler() -> AsyncIOScheduler:
@@ -40,23 +41,19 @@ def create_scheduler() -> AsyncIOScheduler:
 
 
 async def run_fasting_reminders_job() -> None:
-    async with SessionLocal() as db:
-        await send_fasting_reminders(db)
+    await run_tenant_job(send_fasting_reminders)
 
 
 async def run_review_requests_job() -> None:
-    async with SessionLocal() as db:
-        await send_review_requests(db)
+    await run_tenant_job(send_review_requests)
 
 
 async def run_recall_reminders_job() -> None:
-    async with SessionLocal() as db:
-        await send_recall_reminders(db)
+    await run_tenant_job(send_recall_reminders)
 
 
 async def run_daily_digest_job() -> None:
-    async with SessionLocal() as db:
-        await send_daily_digests(db)
+    await run_tenant_job(send_daily_digests)
 
 
 async def run_scheduler_heartbeat_job() -> None:
@@ -67,7 +64,26 @@ async def run_scheduler_heartbeat_alert_job() -> None:
     await check_scheduler_heartbeat_freshness()
 
 
-async def send_fasting_reminders(db: AsyncSession) -> int:
+async def run_tenant_job(job: TenantJob) -> None:
+    for clinic_id in await active_clinic_ids():
+        async with SessionLocal() as db:
+            try:
+                await set_tenant_context(db, clinic_id)
+                await job(db, clinic_id)
+            finally:
+                await clear_tenant_context(db)
+
+
+async def active_clinic_ids() -> list[str]:
+    async with SessionLocal() as db:
+        statement = select(Clinic.id).where(
+            Clinic.deleted_at.is_(None),
+            Clinic.plan_active.is_(True),
+        )
+        return [str(clinic_id) for clinic_id in (await db.execute(statement)).scalars().all()]
+
+
+async def send_fasting_reminders(db: AsyncSession, clinic_id: str) -> int:
     due_until = now_ist() + timedelta(days=1)
     statement = (
         select(TestBooking)
@@ -75,9 +91,12 @@ async def send_fasting_reminders(db: AsyncSession) -> int:
         .join(TestBooking.test)
         .join(TestBooking.clinic)
         .where(
-            TestBooking.clinic_id == Clinic.id,
+            TestBooking.clinic_id == clinic_id,
+            Clinic.id == clinic_id,
             TestBooking.patient_id == Patient.id,
+            Patient.clinic_id == clinic_id,
             TestBooking.test_id == Test.id,
+            Test.clinic_id == clinic_id,
             TestBooking.collection_slot.is_not(None),
             TestBooking.collection_slot <= due_until,
             TestBooking.status.in_(("booked", "sample_collected")),
@@ -96,12 +115,15 @@ async def send_fasting_reminders(db: AsyncSession) -> int:
     return len(bookings)
 
 
-async def send_recall_reminders(db: AsyncSession) -> int:
+async def send_recall_reminders(db: AsyncSession, clinic_id: str) -> int:
     statement = (
         select(RecallSchedule)
         .join(RecallSchedule.patient)
         .join(RecallSchedule.clinic)
         .where(
+            RecallSchedule.clinic_id == clinic_id,
+            Patient.clinic_id == clinic_id,
+            Clinic.id == clinic_id,
             RecallSchedule.trigger_at <= now_ist(),
             RecallSchedule.status == "pending",
             Patient.opt_in.is_(True),
@@ -122,12 +144,15 @@ async def send_recall_reminders(db: AsyncSession) -> int:
     return len(recalls)
 
 
-async def send_review_requests(db: AsyncSession) -> int:
+async def send_review_requests(db: AsyncSession, clinic_id: str) -> int:
     statement = (
         select(TestBooking)
         .join(TestBooking.patient)
         .join(TestBooking.clinic)
         .where(
+            TestBooking.clinic_id == clinic_id,
+            Patient.clinic_id == clinic_id,
+            Clinic.id == clinic_id,
             TestBooking.status == "delivered",
             TestBooking.report_delivered_at.is_not(None),
             TestBooking.deleted_at.is_(None),
@@ -145,30 +170,29 @@ async def send_review_requests(db: AsyncSession) -> int:
     return len(bookings)
 
 
-async def send_daily_digests(db: AsyncSession) -> int:
-    clinics = list(
-        (
-            await db.execute(
-                select(Clinic).where(
-                    Clinic.deleted_at.is_(None),
-                    Clinic.owner_whatsapp.is_not(None),
-                ),
-            )
+async def send_daily_digests(db: AsyncSession, clinic_id: str) -> int:
+    clinic = (
+        await db.execute(
+            select(Clinic).where(
+                Clinic.id == clinic_id,
+                Clinic.deleted_at.is_(None),
+                Clinic.owner_whatsapp.is_not(None),
+            ),
         )
-        .scalars()
-        .all(),
+    ).scalar_one_or_none()
+    if clinic is None:
+        return 0
+
+    stats = await daily_stats(db, str(clinic.id))
+    await whatsapp_sender.send_template(
+        phone_number_id=clinic_phone_number_id(clinic),
+        to=clinic.owner_whatsapp,
+        access_token=get_settings().wa_access_token,
+        template_name="daily_digest",
+        language_code=TEMPLATE_LANGUAGE,
+        components=text_components(render_daily_digest(stats)),
     )
-    for clinic in clinics:
-        stats = await daily_stats(db, str(clinic.id))
-        await whatsapp_sender.send_template(
-            phone_number_id=clinic_phone_number_id(clinic),
-            to=clinic.owner_whatsapp,
-            access_token=get_settings().wa_access_token,
-            template_name="daily_digest",
-            language_code=TEMPLATE_LANGUAGE,
-            components=text_components(render_daily_digest(stats)),
-        )
-    return len(clinics)
+    return 1
 
 
 async def write_scheduler_heartbeat() -> None:

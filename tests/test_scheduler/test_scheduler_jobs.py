@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from datetime import timedelta
 from decimal import Decimal
+from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
@@ -10,6 +11,7 @@ import pytest_asyncio
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import main as main_app
 from app.config import get_settings
 from app.models import Clinic, Patient, RecallSchedule, Test, TestBooking
 from app.services.cache import redis_get
@@ -37,20 +39,23 @@ async def redis_client() -> AsyncGenerator[Redis, None]:
         await client.aclose()
 
 
-async def create_scheduler_fixture(db_session: AsyncSession) -> tuple[Clinic, Patient, TestBooking]:
+async def create_scheduler_fixture(
+    db_session: AsyncSession,
+    suffix: str = "6001",
+) -> tuple[Clinic, Patient, TestBooking]:
     clinic = Clinic(
         id=uuid4(),
         name="Scheduler Diagnostics",
         owner_name="Owner",
-        whatsapp_number="+918100006001",
-        owner_whatsapp="+919000006001",
+        whatsapp_number=f"+91810000{suffix}",
+        owner_whatsapp=f"+91900000{suffix}",
         clinic_type="diagnostic",
         gbp_review_link="https://maps.example/review",
-        settings={"wa_phone_number_id": "phone-scheduler-6001"},
+        settings={"wa_phone_number_id": f"phone-scheduler-{suffix}"},
     )
     patient = Patient(
         clinic_id=clinic.id,
-        whatsapp_number="+917700006001",
+        whatsapp_number=f"+91770000{suffix}",
         name="Anita",
         opt_in=True,
     )
@@ -83,6 +88,7 @@ async def test_send_fasting_reminders_sends_due_template_once(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     clinic, patient, booking = await create_scheduler_fixture(db_session)
+    await create_scheduler_fixture(db_session, "6002")
     sent: list[dict[str, object]] = []
 
     async def fake_send_template(
@@ -98,7 +104,7 @@ async def test_send_fasting_reminders_sends_due_template_once(
 
     monkeypatch.setattr("app.services.whatsapp_sender.send_template", fake_send_template)
 
-    count = await send_fasting_reminders(db_session)
+    count = await send_fasting_reminders(db_session, str(clinic.id))
 
     assert count == 1
     assert sent[0]["to"] == patient.whatsapp_number
@@ -138,7 +144,7 @@ async def test_send_recall_reminders_marks_due_recalls_sent(
 
     monkeypatch.setattr("app.services.whatsapp_sender.send_template", fake_send_template)
 
-    count = await send_recall_reminders(db_session)
+    count = await send_recall_reminders(db_session, str(clinic.id))
 
     assert count == 1
     assert sent == ["recall_reminder"]
@@ -170,7 +176,7 @@ async def test_send_review_requests_marks_booking_notes(
 
     monkeypatch.setattr("app.services.whatsapp_sender.send_template", fake_send_template)
 
-    count = await send_review_requests(db_session)
+    count = await send_review_requests(db_session, str(booking.clinic_id))
 
     assert count == 1
     assert sent == [patient.whatsapp_number]
@@ -201,7 +207,7 @@ async def test_send_daily_digests_sends_owner_stats(
 
     monkeypatch.setattr("app.services.whatsapp_sender.send_template", fake_send_template)
 
-    count = await send_daily_digests(db_session)
+    count = await send_daily_digests(db_session, str(clinic.id))
 
     assert count == 1
     assert sent[0]["to"] == clinic.owner_whatsapp
@@ -250,3 +256,25 @@ async def test_scheduler_heartbeat_detects_fresh_key(redis_client: Redis) -> Non
 
     assert await redis_client.exists(HEARTBEAT_KEY) == 1
     assert await check_scheduler_heartbeat_freshness(max_age_seconds=300) is True
+
+
+@pytest.mark.asyncio
+async def test_app_lifespan_starts_scheduler_and_writes_initial_heartbeat(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events: list[str] = []
+    scheduler = SimpleNamespace(
+        start=lambda: events.append("start"),
+        shutdown=lambda wait=False: events.append(f"shutdown:{wait}"),
+    )
+
+    async def fake_heartbeat() -> None:
+        events.append("heartbeat")
+
+    monkeypatch.setattr(main_app, "create_scheduler", lambda: scheduler, raising=False)
+    monkeypatch.setattr(main_app, "write_scheduler_heartbeat", fake_heartbeat, raising=False)
+
+    async with main_app.lifespan(main_app.app):
+        assert main_app.app.state.scheduler is scheduler
+
+    assert events == ["heartbeat", "start", "shutdown:False"]

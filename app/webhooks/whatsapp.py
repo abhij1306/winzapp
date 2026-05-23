@@ -13,11 +13,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.database import get_db
-from app.flows import ConsentFlow, FlowMessage
+from app.database import get_db, set_tenant_context
+from app.flows import FlowMessage
 from app.models import ConversationSession, FailedMessage, Message
 from app.schemas.whatsapp_webhook import WAMessage, WAWebhookPayload
 from app.services.cache import get_clinic_cached, get_session_cached
+from app.services.flow_engine import handle_flow_message
 from app.services.observability import capture_exception, record_webhook_latency
 from app.services.whatsapp_sender import send_text
 from app.utils.logger import get_logger
@@ -136,27 +137,29 @@ async def process_incoming_message(
     raw_payload: dict[str, Any],
     db: AsyncSession,
 ) -> None:
-    if await message_already_processed(db, item.wa_message_id):
-        logger.info("webhook.duplicate", wa_message_id=item.wa_message_id)
-        return
-
     clinic = await get_clinic_cached(item.phone_number_id, db)
     if clinic is None:
         await write_failed_message(db, None, item, raw_payload, "Clinic not found")
         return
 
     item = with_clinic_id(item, str(clinic["id"]))
+    await set_tenant_context(db, item.clinic_id)
+    if await message_already_processed(db, item.wa_message_id, item.clinic_id):
+        logger.info("webhook.duplicate", wa_message_id=item.wa_message_id)
+        return
+
     await log_inbound_message(db, item)
 
     try:
         session = await load_session_for_flow(db, item)
-        response = await ConsentFlow().handle(
+        response = await handle_flow_message(
             session,
             FlowMessage(
                 clinic_id=item.clinic_id,
                 whatsapp_number=item.whatsapp_number,
                 text=item.text,
             ),
+            clinic,
             db,
         )
         await send_text(
@@ -187,8 +190,11 @@ def with_clinic_id(item: IncomingWhatsAppMessage, clinic_id: str) -> IncomingWha
     )
 
 
-async def message_already_processed(db: AsyncSession, wa_message_id: str) -> bool:
-    statement = select(Message.id).where(Message.wa_message_id == wa_message_id)
+async def message_already_processed(db: AsyncSession, wa_message_id: str, clinic_id: str) -> bool:
+    statement = select(Message.id).where(
+        Message.clinic_id == clinic_id,
+        Message.wa_message_id == wa_message_id,
+    )
     return (await db.execute(statement)).scalar_one_or_none() is not None
 
 
@@ -225,7 +231,6 @@ async def load_session_for_flow(
     statement = select(ConversationSession).where(
         ConversationSession.clinic_id == item.clinic_id,
         ConversationSession.whatsapp_number == item.whatsapp_number,
-        ConversationSession.is_active.is_(True),
     )
     return (await db.execute(statement)).scalar_one_or_none()
 

@@ -181,6 +181,25 @@ async def test_upload_report_rejects_non_pdf_file(
 
 
 @pytest.mark.asyncio
+async def test_upload_report_rejects_automatic_delivery_for_opted_out_patient(
+    db_session: AsyncSession,
+    api_client: httpx.AsyncClient,
+) -> None:
+    clinic, patient, booking = await create_pending_report_fixture(db_session)
+    patient.opt_in = False
+    await db_session.commit()
+
+    response = await api_client.post(
+        f"/api/v1/clinics/{clinic.id}/test-bookings/{booking.id}/report-upload",
+        headers=auth_headers(clinic),
+        files={"report_pdf": ("hba1c.pdf", b"%PDF-1.4", "application/pdf")},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "PATIENT_OPTED_OUT"
+
+
+@pytest.mark.asyncio
 async def test_upload_report_rejects_cross_clinic_booking(
     db_session: AsyncSession,
     api_client: httpx.AsyncClient,

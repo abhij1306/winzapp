@@ -37,16 +37,16 @@ This file proves that the archived spec has not been lost. Every major requireme
 | Endpoint | Requirement | Phase | Execution Task |
 |---|---|---:|---|
 | `GET /health` | OBS-003 | Pilot MVP | S1-T01, S1-T13 |
-| `GET /webhook/whatsapp` | WA-001 | Pilot MVP | S1-T10 |
-| `POST /webhook/whatsapp` | WA-002..005 | Pilot MVP | S1-T10 |
-| `POST /auth/otp/send` | API-002 | Pilot MVP | S3-T01 |
-| `POST /auth/otp/verify` | API-002 | Pilot MVP | S3-T01 |
+| `GET /webhooks/whatsapp` | WA-001 | Pilot MVP | S1-T12 |
+| `POST /webhooks/whatsapp` | WA-002..005 | Pilot MVP | S1-T12 |
+| `POST /api/v1/auth/otp/send` | API-002 | Pilot MVP | S3-T01 |
+| `POST /api/v1/auth/otp/verify` | API-002 | Pilot MVP | S3-T01 |
 | `GET /api/v1/clinics/{id}` | API-003 | Pilot MVP | S3-T02 |
 | `PUT /api/v1/clinics/{id}` | API-003 | Pilot MVP | S3-T02 |
 | `GET /api/v1/clinics/{id}/test-bookings` | API-004 | Pilot MVP | S3-T03 |
 | `POST /api/v1/clinics/{id}/test-bookings` | API-004 | Pilot MVP | S2-T04/S3-T03 |
 | `PUT /api/v1/clinics/{id}/test-bookings/{booking_id}` | API-004 | Pilot MVP | S3-T03 |
-| `POST /api/v1/clinics/{id}/test-bookings/{booking_id}/report` | API-004, REP-001 | Pilot MVP | S3-T04 |
+| `POST /api/v1/clinics/{id}/test-bookings/{booking_id}/report-upload` | API-004, REP-001 | Pilot MVP | S3-T04 |
 | `DELETE /api/v1/clinics/{id}/test-bookings/{booking_id}` | API-004 | Pilot MVP | S2-T06/S3-T03 |
 | `POST /api/v1/report-ready` | API-005, REP-002 | Pilot MVP | S2-T06 |
 | `GET /api/v1/clinics/{id}/patients` | API-006 | Pilot MVP | S3-T05 |

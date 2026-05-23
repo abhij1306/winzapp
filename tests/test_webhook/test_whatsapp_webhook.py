@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -15,7 +16,9 @@ from app.config import get_settings
 from app.database import get_db
 from app.flows.base_flow import FlowMessage
 from app.main import app
-from app.models import Clinic, FailedMessage, Message
+from app.models import Clinic, ConversationSession, FailedMessage, Message, Patient, Test
+from app.services import flow_engine
+from app.templates.hinglish import ADMIN_UNKNOWN_COMMAND
 from app.webhooks import whatsapp as whatsapp_webhook
 
 SECRET = "test-secret"
@@ -65,7 +68,11 @@ def signed_headers(raw_body: bytes, secret: str = SECRET) -> dict[str, str]:
     return {"X-Hub-Signature-256": f"sha256={digest}"}
 
 
-def webhook_body(message_id: str = "wamid-1", text: str = "Hi") -> bytes:
+def webhook_body(
+    message_id: str = "wamid-1",
+    text: str = "Hi",
+    whatsapp_number: str = "919999999999",
+) -> bytes:
     return json.dumps(
         {
             "object": "whatsapp_business_account",
@@ -82,11 +89,11 @@ def webhook_body(message_id: str = "wamid-1", text: str = "Hi") -> bytes:
                                     "phone_number_id": PHONE_NUMBER_ID,
                                 },
                                 "contacts": [
-                                    {"wa_id": "919999999999", "profile": {"name": "Patient"}}
+                                    {"wa_id": whatsapp_number, "profile": {"name": "Patient"}}
                                 ],
                                 "messages": [
                                     {
-                                        "from": "919999999999",
+                                        "from": whatsapp_number,
                                         "id": message_id,
                                         "timestamp": "1730000000",
                                         "type": "text",
@@ -114,6 +121,31 @@ async def create_clinic(db_session: AsyncSession) -> Clinic:
     db_session.add(clinic)
     await db_session.commit()
     return clinic
+
+
+async def create_consented_patient_session(
+    db_session: AsyncSession,
+    clinic: Clinic,
+    whatsapp_number: str = "919999999999",
+) -> ConversationSession:
+    patient = Patient(
+        clinic_id=clinic.id,
+        whatsapp_number=whatsapp_number,
+        opt_in=True,
+        opt_in_at=datetime.now(UTC),
+    )
+    session = ConversationSession(
+        clinic_id=clinic.id,
+        patient=patient,
+        whatsapp_number=whatsapp_number,
+        flow="consent",
+        step="consent_granted",
+        is_active=False,
+        context={"automation_stopped": False},
+    )
+    db_session.add_all([patient, session])
+    await db_session.commit()
+    return session
 
 
 @pytest.mark.asyncio
@@ -178,7 +210,7 @@ async def test_duplicate_message_is_silently_acked(
     async def fail_flow(*_args: object, **_kwargs: object) -> str:
         raise AssertionError("duplicate should not reach flow engine")
 
-    monkeypatch.setattr(whatsapp_webhook.ConsentFlow, "handle", fail_flow)
+    monkeypatch.setattr(flow_engine.ConsentFlow, "handle", fail_flow)
     body = webhook_body(message_id="wamid-duplicate")
     response = await webhook_client.post(
         "/webhooks/whatsapp",
@@ -193,6 +225,44 @@ async def test_duplicate_message_is_silently_acked(
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
     assert message_count == 1
+
+
+@pytest.mark.asyncio
+async def test_idempotency_lookup_is_scoped_to_resolved_clinic(
+    db_session: AsyncSession,
+) -> None:
+    first_clinic = await create_clinic(db_session)
+    second_clinic = Clinic(
+        id=uuid4(),
+        name="Other Diagnostics",
+        whatsapp_number="+919000000003",
+        owner_whatsapp="+919000000004",
+        clinic_type="diagnostic",
+        settings={"wa_phone_number_id": "phone-456"},
+    )
+    db_session.add_all(
+        [
+            second_clinic,
+            Message(
+                clinic_id=first_clinic.id,
+                whatsapp_number="919999999999",
+                direction="inbound",
+                message_type="text",
+                content="Hi",
+                metadata_json={},
+                wa_message_id="wamid-other-clinic",
+            ),
+        ],
+    )
+    await db_session.commit()
+
+    found = await whatsapp_webhook.message_already_processed(
+        db_session,
+        "wamid-other-clinic",
+        str(second_clinic.id),
+    )
+
+    assert found is False
 
 
 @pytest.mark.asyncio
@@ -226,7 +296,7 @@ async def test_valid_message_logs_inbound_routes_flow_and_sends_response(
         sent_messages.append((phone_number_id, to, access_token, body))
         return {"messages": [{"id": "wamid-out"}]}
 
-    monkeypatch.setattr(whatsapp_webhook.ConsentFlow, "handle", fake_handle)
+    monkeypatch.setattr(flow_engine.ConsentFlow, "handle", fake_handle)
     monkeypatch.setattr(whatsapp_webhook, "send_text", fake_send_text)
     body = webhook_body()
 
@@ -248,6 +318,142 @@ async def test_valid_message_logs_inbound_routes_flow_and_sends_response(
 
 
 @pytest.mark.asyncio
+async def test_consented_patient_routes_to_booking_flow_using_existing_session(
+    db_session: AsyncSession,
+    webhook_client: httpx.AsyncClient,
+    redis_client: Redis,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clinic = await create_clinic(db_session)
+    clinic_id = clinic.id
+    session = await create_consented_patient_session(db_session, clinic)
+    db_session.add(Test(clinic_id=clinic_id, name="CBC", category="Blood", sort_order=1))
+    await db_session.commit()
+    sent_messages: list[str] = []
+
+    async def fake_send_text(
+        _phone_number_id: str,
+        _to: str,
+        _access_token: str,
+        body: str,
+    ) -> dict[str, object]:
+        sent_messages.append(body)
+        return {"messages": [{"id": "wamid-out"}]}
+
+    monkeypatch.setattr(whatsapp_webhook, "send_text", fake_send_text)
+    body = webhook_body(message_id="wamid-booking", text="book blood test")
+
+    response = await webhook_client.post(
+        "/webhooks/whatsapp",
+        content=body,
+        headers=signed_headers(body),
+    )
+
+    sessions = (
+        await db_session.execute(
+            select(ConversationSession).where(ConversationSession.clinic_id == clinic_id),
+        )
+    ).scalars().all()
+
+    assert response.status_code == 200
+    assert sessions == [session]
+    assert session.flow == "test_booking"
+    assert session.is_active is True
+    assert sent_messages == ["Kaunsa test category chahiye?\n1. Blood"]
+
+
+@pytest.mark.parametrize(
+    ("text", "flow_class"),
+    [
+        ("home collection", flow_engine.HomeCollectionFlow),
+        ("check report", flow_engine.ReportInquiryFlow),
+        ("cancel test", flow_engine.CancellationFlow),
+    ],
+)
+@pytest.mark.asyncio
+async def test_consented_patient_routes_remaining_diagnostics_intents(
+    db_session: AsyncSession,
+    webhook_client: httpx.AsyncClient,
+    redis_client: Redis,
+    monkeypatch: pytest.MonkeyPatch,
+    text: str,
+    flow_class: type[object],
+) -> None:
+    clinic = await create_clinic(db_session)
+    await create_consented_patient_session(db_session, clinic)
+    handled_messages: list[str] = []
+    sent_messages: list[str] = []
+
+    async def fake_handle(
+        _flow: object,
+        _session: ConversationSession | None,
+        message: FlowMessage,
+        _db: AsyncSession,
+    ) -> str:
+        handled_messages.append(message.text)
+        return "routed"
+
+    async def fake_send_text(
+        _phone_number_id: str,
+        _to: str,
+        _access_token: str,
+        body: str,
+    ) -> dict[str, object]:
+        sent_messages.append(body)
+        return {"messages": [{"id": "wamid-out"}]}
+
+    monkeypatch.setattr(flow_class, "handle", fake_handle)
+    monkeypatch.setattr(whatsapp_webhook, "send_text", fake_send_text)
+    body = webhook_body(message_id=f"wamid-{text}", text=text)
+
+    response = await webhook_client.post(
+        "/webhooks/whatsapp",
+        content=body,
+        headers=signed_headers(body),
+    )
+
+    assert response.status_code == 200
+    assert handled_messages == [text]
+    assert sent_messages == ["routed"]
+
+
+@pytest.mark.asyncio
+async def test_owner_message_routes_to_admin_flow_without_patient_consent(
+    db_session: AsyncSession,
+    webhook_client: httpx.AsyncClient,
+    redis_client: Redis,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clinic = await create_clinic(db_session)
+    sent_messages: list[str] = []
+
+    async def fake_send_text(
+        _phone_number_id: str,
+        _to: str,
+        _access_token: str,
+        body: str,
+    ) -> dict[str, object]:
+        sent_messages.append(body)
+        return {"messages": [{"id": "wamid-out"}]}
+
+    monkeypatch.setattr(whatsapp_webhook, "send_text", fake_send_text)
+    body = webhook_body(
+        message_id="wamid-owner",
+        text="not a known command",
+        whatsapp_number=clinic.owner_whatsapp,
+    )
+
+    response = await webhook_client.post(
+        "/webhooks/whatsapp",
+        content=body,
+        headers=signed_headers(body),
+    )
+
+    assert response.status_code == 200
+    assert sent_messages == [ADMIN_UNKNOWN_COMMAND]
+
+
+@pytest.mark.asyncio
 async def test_flow_exception_writes_failed_message_after_inbound_log(
     db_session: AsyncSession,
     webhook_client: httpx.AsyncClient,
@@ -260,7 +466,7 @@ async def test_flow_exception_writes_failed_message_after_inbound_log(
     async def failing_handle(*_args: object, **_kwargs: object) -> str:
         raise RuntimeError("flow crashed")
 
-    monkeypatch.setattr(whatsapp_webhook.ConsentFlow, "handle", failing_handle)
+    monkeypatch.setattr(flow_engine.ConsentFlow, "handle", failing_handle)
     body = webhook_body(message_id="wamid-fail")
 
     response = await webhook_client.post(

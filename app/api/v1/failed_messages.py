@@ -13,13 +13,14 @@ from app.api.errors import error_response
 from app.api.v1.test_bookings import authorize_request
 from app.config import get_settings
 from app.database import get_db
-from app.flows import ConsentFlow, FlowMessage
+from app.flows import FlowMessage
 from app.models import FailedMessage
 from app.schemas.common import PaginatedResponse, PaginationMeta
 from app.schemas.failed_message import FailedMessageData, FailedMessageResponse
 from app.schemas.whatsapp_webhook import WAWebhookPayload
 from app.services.audit import write_audit
 from app.services.cache import get_clinic_cached
+from app.services.flow_engine import handle_flow_message
 from app.services.whatsapp_sender import send_text
 from app.utils.datetime_utils import now_ist
 from app.webhooks.whatsapp import (
@@ -187,17 +188,18 @@ async def replay_incoming_item(
         raise RuntimeError("Clinic not found")
 
     item = with_clinic_id(item, str(clinic["id"]))
-    if not await message_already_processed(db, item.wa_message_id):
+    if not await message_already_processed(db, item.wa_message_id, item.clinic_id):
         await log_inbound_message(db, item)
 
     session = await load_session_for_flow(db, item)
-    response = await ConsentFlow().handle(
+    response = await handle_flow_message(
         session,
         FlowMessage(
             clinic_id=item.clinic_id,
             whatsapp_number=item.whatsapp_number,
             text=item.text,
         ),
+        clinic,
         db,
     )
     await send_text(

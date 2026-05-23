@@ -3,13 +3,15 @@ from __future__ import annotations
 from typing import Annotated, cast
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import app.services.storage as storage
 import app.services.whatsapp_sender as whatsapp_sender
 from app.api.errors import error_response
+from app.api.v1.test_bookings import authorize_request
 from app.config import get_settings
 from app.database import get_db
 from app.models import Patient, TestBooking
@@ -27,7 +29,12 @@ router = APIRouter(tags=["reports"])
 async def report_ready(
     payload: ReportReadyRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
+    authorization: Annotated[str | None, Header(alias="Authorization")] = None,
 ) -> ReportReadyResponse:
+    owner = await authorize_request(db, authorization, payload.clinic_id)
+    if isinstance(owner, JSONResponse):
+        return cast(ReportReadyResponse, owner)
+
     match = await find_report_booking(payload, db)
     if match is None:
         return cast(
@@ -36,6 +43,9 @@ async def report_ready(
         )
 
     patient, booking = match
+    if not patient.opt_in:
+        return patient_opted_out_response()
+
     clinic = await get_clinic_by_id_cached(payload.clinic_id, db)
     stored_path = await store_report(payload, booking)
     signed_url = await storage.create_signed_url(stored_path, expires_in=86400)
@@ -146,3 +156,14 @@ def clinic_phone_number_id(clinic: dict[str, object] | None) -> str:
     if isinstance(settings, dict):
         return str(settings.get("wa_phone_number_id") or "")
     return ""
+
+
+def patient_opted_out_response() -> ReportReadyResponse:
+    return cast(
+        ReportReadyResponse,
+        error_response(
+            403,
+            "PATIENT_OPTED_OUT",
+            "Patient has opted out of automated WhatsApp delivery.",
+        ),
+    )

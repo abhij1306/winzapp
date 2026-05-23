@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -17,4 +18,20 @@ SessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False)
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with SessionLocal() as session:
-        yield session
+        try:
+            yield session
+        finally:
+            await clear_tenant_context(session)
+
+
+async def set_tenant_context(session: AsyncSession, clinic_id: str) -> None:
+    await session.execute(
+        text("SELECT set_config('app.clinic_id', :clinic_id, false)"),
+        {"clinic_id": clinic_id},
+    )
+
+
+async def clear_tenant_context(session: AsyncSession) -> None:
+    await session.rollback()
+    await session.execute(text("RESET app.clinic_id"))
+    await session.commit()

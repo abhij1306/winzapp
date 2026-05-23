@@ -7,6 +7,8 @@ from sqlalchemy import text
 
 from app.config import get_settings
 from app.database import SessionLocal
+from app.services.cache import redis_get
+from app.services.scheduler import HEARTBEAT_KEY
 
 HealthCheck = Literal["ok", "error"]
 
@@ -15,6 +17,7 @@ async def get_health_status() -> dict[str, object]:
     checks = {
         "database": await check_database(),
         "redis": await check_redis(),
+        "scheduler": await check_scheduler(),
     }
     return {
         "status": "ok" if all(value == "ok" for value in checks.values()) else "degraded",
@@ -40,3 +43,7 @@ async def check_redis() -> HealthCheck:
     finally:
         await client.aclose()
     return "ok"
+
+
+async def check_scheduler() -> HealthCheck:
+    return "ok" if await redis_get(HEARTBEAT_KEY) is not None else "error"

@@ -201,7 +201,6 @@ async def get_session_cached(
     statement = select(ConversationSession).where(
         ConversationSession.clinic_id == clinic_id,
         ConversationSession.whatsapp_number == whatsapp_number,
-        ConversationSession.is_active.is_(True),
     )
     session = (await db.execute(statement)).scalar_one_or_none()
     if session is None:

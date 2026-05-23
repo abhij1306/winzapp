@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import app.services.storage as storage
 import app.services.whatsapp_sender as whatsapp_sender
 from app.api.errors import error_response
-from app.api.v1.report_ready import clinic_phone_number_id
+from app.api.v1.report_ready import clinic_phone_number_id, patient_opted_out_response
 from app.api.v1.test_bookings import authorize_request, booking_snapshot, find_booking
 from app.config import get_settings
 from app.database import get_db
@@ -43,6 +43,9 @@ async def upload_report(
             ReportReadyResponse,
             error_response(404, "BOOKING_NOT_FOUND", "Booking was not found."),
         )
+    if not booking.patient.opt_in:
+        return patient_opted_out_response()
+
     if not is_pdf_upload(report_pdf):
         return invalid_pdf_response()
 

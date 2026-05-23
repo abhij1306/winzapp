@@ -15,6 +15,7 @@ from app.config import get_settings
 from app.database import get_db
 from app.main import app
 from app.models import AuditLog, Clinic, Patient, Test, TestBooking
+from app.services.auth import create_access_token
 
 
 @pytest_asyncio.fixture
@@ -86,6 +87,64 @@ async def create_report_ready_fixture(
     return patient, booking
 
 
+def auth_headers(clinic_id: UUID) -> dict[str, str]:
+    token = create_access_token("+919000000002", str(clinic_id))
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.mark.asyncio
+async def test_report_ready_requires_owner_auth_before_booking_lookup(
+    db_session: AsyncSession,
+    redis_client: Redis,
+    api_client: httpx.AsyncClient,
+) -> None:
+    clinic_id = uuid4()
+    await create_report_ready_fixture(db_session, clinic_id, "+919876543209")
+
+    response = await api_client.post(
+        "/api/v1/report-ready",
+        json={
+            "clinic_id": str(clinic_id),
+            "patient_phone": "+919876543299",
+            "test_name": "HbA1c",
+            "report_pdf_url": "https://reports.example/hba1c.pdf",
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "AUTH_REQUIRED"
+
+
+@pytest.mark.asyncio
+async def test_report_ready_rejects_automatic_delivery_for_opted_out_patient(
+    db_session: AsyncSession,
+    redis_client: Redis,
+    api_client: httpx.AsyncClient,
+) -> None:
+    clinic_id = uuid4()
+    patient, _booking = await create_report_ready_fixture(
+        db_session,
+        clinic_id,
+        "+919876543208",
+    )
+    patient.opt_in = False
+    await db_session.commit()
+
+    response = await api_client.post(
+        "/api/v1/report-ready",
+        headers=auth_headers(clinic_id),
+        json={
+            "clinic_id": str(clinic_id),
+            "patient_phone": patient.whatsapp_number,
+            "test_name": "HbA1c",
+            "report_pdf_url": "https://reports.example/hba1c.pdf",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "PATIENT_OPTED_OUT"
+
+
 @pytest.mark.asyncio
 async def test_report_ready_delivers_pdf_url_updates_booking_and_audits(
     db_session: AsyncSession,
@@ -134,6 +193,7 @@ async def test_report_ready_delivers_pdf_url_updates_booking_and_audits(
 
     response = await api_client.post(
         "/api/v1/report-ready",
+        headers=auth_headers(clinic_id),
         json={
             "clinic_id": str(clinic_id),
             "patient_phone": patient.whatsapp_number,
@@ -223,6 +283,7 @@ async def test_report_ready_accepts_base64_pdf_payload(
 
     response = await api_client.post(
         "/api/v1/report-ready",
+        headers=auth_headers(clinic_id),
         json={
             "clinic_id": str(clinic_id),
             "patient_phone": patient.whatsapp_number,
@@ -241,13 +302,18 @@ async def test_report_ready_accepts_base64_pdf_payload(
 
 @pytest.mark.asyncio
 async def test_report_ready_missing_booking_returns_error_envelope(
+    db_session: AsyncSession,
     redis_client: Redis,
     api_client: httpx.AsyncClient,
 ) -> None:
+    clinic_id = uuid4()
+    await create_report_ready_fixture(db_session, clinic_id, "+919876543213")
+
     response = await api_client.post(
         "/api/v1/report-ready",
+        headers=auth_headers(clinic_id),
         json={
-            "clinic_id": str(uuid4()),
+            "clinic_id": str(clinic_id),
             "patient_phone": "+919876543212",
             "test_name": "HbA1c",
             "report_pdf_url": "https://reports.example/hba1c.pdf",

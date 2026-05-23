@@ -3,9 +3,9 @@
 The incoming webhook order is fixed.
 
 1. Verify Meta signature.
-2. Check idempotency by `messages.wa_message_id`.
-3. Log inbound message to `messages`.
-4. Resolve clinic by `phone_number_id` through cache.
+2. Resolve clinic by `phone_number_id` through cache and set `app.clinic_id`.
+3. Check idempotency by tenant-scoped `messages.wa_message_id`.
+4. Log inbound message to `messages`.
 5. Load or create conversation session through cache.
 6. Run consent flow if this is the first patient message.
 7. Route message through intent router and flow engine.
@@ -16,7 +16,8 @@ Invalid signatures return 403. All other non-validation failures should be captu
 
 ## Idempotency
 
-Duplicate `wa_message_id` values are silently ACKed with no flow execution and no duplicate outbound messages.
+Duplicate `wa_message_id` values are silently ACKed with no flow execution and no duplicate
+outbound messages. The lookup includes `clinic_id` because `messages` is RLS-protected.
 
 ## Cache Rules
 

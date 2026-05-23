@@ -20,7 +20,13 @@ CANCEL_BOOKING_CONFIRMED = "{test_name} booking cancel kar di gayi hai."
 OTP_LOGIN_MESSAGE = "Aapka Winzapp login OTP {otp} hai. Ye 5 minutes ke liye valid hai."
 ADMIN_UNAUTHORIZED = "Ye command sirf clinic owner ke liye available hai."
 ADMIN_UNKNOWN_COMMAND = "Admin command samajh nahi paaya."
+PATIENT_UNKNOWN_INTENT = (
+    "Test booking, home collection, report ya cancellation ke liye message bhejein."
+)
 ADMIN_REPORT_NOT_FOUND = "Ready report nahi mili. Pehle report upload/ready karein."
+ADMIN_PATIENT_OPTED_OUT = (
+    "Patient ne WhatsApp automation opt out kiya hai. Report manually share karein."
+)
 ADMIN_REPORT_SENT = "{test_name} report patient ko bhej di gayi hai."
 REPORT_DELIVERY_CAPTION = "{test_name} report attached hai."
 

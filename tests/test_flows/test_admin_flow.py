@@ -15,6 +15,7 @@ from app.flows.admin_flow import AdminFlow
 from app.flows.base_flow import FlowMessage
 from app.models import AuditLog, Clinic, Patient, Test, TestBooking
 from app.templates.hinglish import (
+    ADMIN_PATIENT_OPTED_OUT,
     ADMIN_REPORT_NOT_FOUND,
     ADMIN_REPORT_SENT,
     ADMIN_UNAUTHORIZED,
@@ -287,6 +288,34 @@ async def test_admin_send_report_without_ready_file_returns_not_found(
     )
 
     assert response == ADMIN_REPORT_NOT_FOUND
+
+
+@pytest.mark.asyncio
+async def test_admin_send_report_rejects_opted_out_patient(
+    db_session: AsyncSession,
+    redis_client: Redis,
+) -> None:
+    clinic_id = uuid4()
+    owner_whatsapp = "+919000000002"
+    patient, _cbc, ready_report, _home_pending, _old_booking = await create_admin_fixture(
+        db_session,
+        clinic_id,
+        owner_whatsapp,
+    )
+    patient.opt_in = False
+    await db_session.commit()
+
+    response = await AdminFlow().handle(
+        session=None,
+        message=FlowMessage(
+            clinic_id=clinic_id,
+            whatsapp_number=owner_whatsapp,
+            text=f"send report {ready_report.id}",
+        ),
+        db=db_session,
+    )
+
+    assert response == ADMIN_PATIENT_OPTED_OUT
 
 
 @pytest.mark.asyncio

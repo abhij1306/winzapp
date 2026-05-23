@@ -62,6 +62,25 @@ describe('App', () => {
       );
     });
   });
+
+  it('sends OTP request bodies accepted by the backend schema', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await login(user);
+
+    const calls = vi.mocked(fetch).mock.calls;
+    const sendRequest = calls.find(([input]) => String(input).endsWith('/auth/otp/send'));
+    const verifyRequest = calls.find(([input]) => String(input).endsWith('/auth/otp/verify'));
+
+    expect(JSON.parse(String(sendRequest?.[1]?.body))).toEqual({
+      owner_whatsapp: '+919000000001',
+    });
+    expect(JSON.parse(String(verifyRequest?.[1]?.body))).toEqual({
+      owner_whatsapp: '+919000000001',
+      otp: '123456',
+    });
+  });
 });
 
 async function login(user: ReturnType<typeof userEvent.setup>) {

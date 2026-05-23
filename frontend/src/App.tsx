@@ -239,7 +239,7 @@ function LoginScreen({
 
   async function sendOtp(event: FormEvent) {
     event.preventDefault();
-    await publicFetch('/auth/otp/send', { method: 'POST', body: { clinic_id: clinicId, owner_whatsapp: ownerWhatsapp } });
+    await publicFetch('/auth/otp/send', { method: 'POST', body: { owner_whatsapp: ownerWhatsapp } });
     setOtpSent(true);
     setNotice('OTP sent on WhatsApp.');
   }
@@ -248,7 +248,7 @@ function LoginScreen({
     event.preventDefault();
     const response = await publicFetch<{ data: { access_token: string } }>('/auth/otp/verify', {
       method: 'POST',
-      body: { clinic_id: clinicId, owner_whatsapp: ownerWhatsapp, otp },
+      body: { owner_whatsapp: ownerWhatsapp, otp },
     });
     await onVerified({ clinicId, token: response.data.access_token });
   }
