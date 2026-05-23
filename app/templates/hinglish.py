@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+from typing import Protocol
+
 CONSENT_PROMPT = (
     "Namaste. WhatsApp par booking, reports aur reminders bhejne ke liye aapki consent chahiye. "
     "Consent dene ke liye Haan reply karein. Mana karne ke liye Nahi reply karein."
@@ -14,6 +17,17 @@ HOME_COLLECTION_CONFIRMED = "{test_name} ke liye home collection booking confirm
 REPORT_STATUS_NOT_FOUND = "Aapki koi active test booking nahi mili."
 CANCEL_BOOKING_NOT_FOUND = "Cancel karne ke liye koi active booking nahi mili."
 CANCEL_BOOKING_CONFIRMED = "{test_name} booking cancel kar di gayi hai."
+ADMIN_UNAUTHORIZED = "Ye command sirf clinic owner ke liye available hai."
+ADMIN_UNKNOWN_COMMAND = "Admin command samajh nahi paaya."
+ADMIN_REPORT_NOT_FOUND = "Ready report nahi mili. Pehle report upload/ready karein."
+ADMIN_REPORT_SENT = "{test_name} report patient ko bhej di gayi hai."
+
+
+class BookingSummary(Protocol):
+    id: object
+    test_name: str
+    booking_type: str
+    status: str
 
 
 def render_category_prompt(categories: list[str]) -> str:
@@ -53,3 +67,38 @@ def render_report_status_pending(test_name: str, status: str) -> str:
 
 def render_report_status_ready(test_name: str) -> str:
     return f"{test_name} report ready hai. Clinic team WhatsApp par report bhej degi."
+
+
+def render_admin_today_bookings(bookings: Sequence[BookingSummary]) -> str:
+    if not bookings:
+        return "Aaj ke liye koi test booking nahi hai."
+    rows = [render_admin_booking(index, booking) for index, booking in enumerate(bookings, 1)]
+    return "Aaj ke tests:\n" + "\n".join(rows)
+
+
+def render_admin_pending_reports(bookings: Sequence[BookingSummary]) -> str:
+    if not bookings:
+        return "Koi pending report nahi hai."
+    rows = [render_admin_booking(index, booking) for index, booking in enumerate(bookings, 1)]
+    return "Pending reports:\n" + "\n".join(rows)
+
+
+def render_admin_booking(index: int, booking: BookingSummary) -> str:
+    return (
+        f"{index}. {booking.test_name} - {booking.booking_type} - "
+        f"{booking.status} - {short_id(booking.id)}"
+    )
+
+
+def render_admin_daily_stats(stats: dict[str, int]) -> str:
+    return (
+        "Daily stats:\n"
+        f"Tests booked today: {stats['bookings_today']} "
+        f"({stats['home_collection_today']} home collection, {stats['walkin_today']} walk-in)\n"
+        f"Pending reports: {stats['pending_reports']}\n"
+        f"Reports delivered today: {stats['reports_delivered_today']}"
+    )
+
+
+def short_id(value: object) -> str:
+    return str(value)[:8]

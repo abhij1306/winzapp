@@ -222,7 +222,7 @@ Support report status inquiry and soft-cancel bookings with audit log.
 Test requirement: `tests/test_flows/test_report_and_cancel_flows.py`.
 
 ### S2-T05: Admin WhatsApp diagnostics commands
-- [ ] Status: pending; blocked by S2-T02
+- [x] Status: completed
 
 Commands: today's tests, pending reports, send report, cancel booking, daily stats.
 

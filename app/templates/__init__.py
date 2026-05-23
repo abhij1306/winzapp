@@ -1,4 +1,8 @@
 from app.templates.hinglish import (
+    ADMIN_REPORT_NOT_FOUND,
+    ADMIN_REPORT_SENT,
+    ADMIN_UNAUTHORIZED,
+    ADMIN_UNKNOWN_COMMAND,
     CANCEL_BOOKING_CONFIRMED,
     CANCEL_BOOKING_NOT_FOUND,
     CONSENT_ACCEPTED,
@@ -13,6 +17,9 @@ from app.templates.hinglish import (
     TEST_BOOKING_UNKNOWN_CATEGORY,
     TEST_BOOKING_UNKNOWN_TEST,
     render_address_prompt,
+    render_admin_daily_stats,
+    render_admin_pending_reports,
+    render_admin_today_bookings,
     render_category_prompt,
     render_home_test_selection_prompt,
     render_morning_slot_prompt,
@@ -23,6 +30,10 @@ from app.templates.hinglish import (
 )
 
 __all__ = [
+    "ADMIN_REPORT_NOT_FOUND",
+    "ADMIN_REPORT_SENT",
+    "ADMIN_UNAUTHORIZED",
+    "ADMIN_UNKNOWN_COMMAND",
     "CANCEL_BOOKING_CONFIRMED",
     "CANCEL_BOOKING_NOT_FOUND",
     "CONSENT_ACCEPTED",
@@ -37,6 +48,9 @@ __all__ = [
     "TEST_BOOKING_UNKNOWN_CATEGORY",
     "TEST_BOOKING_UNKNOWN_TEST",
     "render_address_prompt",
+    "render_admin_daily_stats",
+    "render_admin_pending_reports",
+    "render_admin_today_bookings",
     "render_category_prompt",
     "render_home_test_selection_prompt",
     "render_morning_slot_prompt",
