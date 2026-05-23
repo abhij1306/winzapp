@@ -24,16 +24,16 @@ Current focus: `app/main.py` → `app/database.py` → `app/models/` → `migrat
 - [x] S1-T08: Utilities, structured logging, and audit service
 - [x] S1-T09: Feature flags and LLM service abstraction
 - [x] S1-T10: WhatsApp sender service
+- [x] S1-T11: Flow engine base and consent flow
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Complete S1-T11 — flow engine base and consent flow
-2. Complete S1-T12 — WhatsApp webhook handler
-3. Complete S1-T13 — local CI, GitHub Actions, and Railway skeleton
-4. Complete S1-T14 — pilot seed data and Meta template registration scaffold
-5. Start S2-T01 — rule-first diagnostics intent router
+1. Complete S1-T12 — WhatsApp webhook handler
+2. Complete S1-T13 — local CI, GitHub Actions, and Railway skeleton
+3. Complete S1-T14 — pilot seed data and Meta template registration scaffold
+4. Start S2-T01 — rule-first diagnostics intent router
 
 ---
 
@@ -150,6 +150,7 @@ docs/product/traceability.md        Spec coverage map
 
 ### Python Import Path
 - Keep `pytest.ini` with `pythonpath = .`. Without it, Python may import an unrelated `app` package from another workspace path instead of this repo's local `app/` package.
+- Keep `tzdata` in `requirements.txt`. Windows virtualenvs need it for `ZoneInfo("Asia/Kolkata")`; Linux/macOS may get timezone data from the OS and hide the missing dependency.
 
 ### Local Docker
 - Docker Compose is the supported local Postgres/Redis path, but tests cannot start services if Docker Desktop's Linux engine is not running. Start Docker Desktop before running the full local CI path.
@@ -165,17 +166,19 @@ cp .env.example .env
 # Fill in: DATABASE_URL, REDIS_URL, WA_APP_SECRET, WA_VERIFY_TOKEN, GROQ_API_KEY,
 #          SUPABASE_URL, SUPABASE_SERVICE_KEY
 
-# 2. Install dependencies
-pip install -r requirements.txt
+# 2. Create local virtualenv and install dependencies
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
 # 3. Run migrations
-alembic upgrade head
+.\.venv\Scripts\python.exe -m alembic upgrade head
 
 # 4. Seed pilot clinic
-python scripts/seed_pilot.py
+.\.venv\Scripts\python.exe scripts/seed_pilot.py
 
 # 5. Start dev server
-uvicorn app.main:app --reload --port 8000
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 
 # 6. Expose webhook for local testing (requires ngrok or similar)
 ngrok http 8000

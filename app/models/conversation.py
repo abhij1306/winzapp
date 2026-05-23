@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import Boolean, ForeignKey, Index, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
@@ -28,7 +29,7 @@ class ConversationSession(TimestampMixin, Base):
     )
 
     clinic_id: Mapped[str] = mapped_column(ForeignKey("clinics.id", ondelete="CASCADE"), index=True)
-    patient_id: Mapped[str | None] = mapped_column(ForeignKey("patients.id", ondelete="SET NULL"))
+    patient_id: Mapped[UUID | None] = mapped_column(ForeignKey("patients.id", ondelete="SET NULL"))
     whatsapp_number: Mapped[str] = mapped_column(Text, nullable=False)
     flow: Mapped[str | None] = mapped_column(Text)
     step: Mapped[str | None] = mapped_column(Text)

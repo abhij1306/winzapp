@@ -13,4 +13,5 @@ respx>=0.21,<1
 ruff>=0.8,<1
 sqlalchemy>=2.0,<3
 structlog>=24,<25
+tzdata>=2026.1
 uvicorn[standard]>=0.32,<1

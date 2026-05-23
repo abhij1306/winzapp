@@ -138,7 +138,7 @@ Acceptance criteria:
 Test requirement: `tests/test_services/test_whatsapp_sender.py`.
 
 ### S1-T11: Flow engine base and consent flow
-- [ ] Status: pending
+- [x] Status: completed
 
 Build flow base interface, session state conventions, templates module, and explicit consent flow.
 
