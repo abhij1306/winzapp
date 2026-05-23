@@ -166,7 +166,7 @@ Acceptance criteria:
 Test requirement: `tests/test_webhook/test_whatsapp_webhook.py`.
 
 ### S1-T13: Local CI, GitHub Actions, and Railway skeleton
-- [ ] Status: pending
+- [x] Status: completed
 
 Create local CI script/docs, GitHub Actions workflow with Postgres/Redis services, Dockerfile, and Railway config.
 

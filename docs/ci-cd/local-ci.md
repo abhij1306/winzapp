@@ -7,6 +7,12 @@ Local PostgreSQL maps to `localhost:55432` to avoid collisions with developer ma
 ## Required Commands
 
 ```bash
+.\scripts\local_ci.ps1
+```
+
+The script runs:
+
+```bash
 docker compose up -d postgres redis
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
@@ -14,7 +20,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m alembic upgrade head
 .\.venv\Scripts\python.exe -m pytest
 .\.venv\Scripts\python.exe -m mypy app/
-.\.venv\Scripts\python.exe -m ruff check app/
+.\.venv\Scripts\python.exe -m ruff check app tests
 ```
 
 Run the same checks before marking any task complete.

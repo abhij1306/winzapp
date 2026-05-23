@@ -7,7 +7,8 @@ Railway is the Pilot MVP deployment path.
 - Run one web replica only.
 - APScheduler runs inside the FastAPI process for Pilot MVP.
 - Do not enable autoscaling while scheduler is in-process.
-- Migrations run during deploy before the app starts serving traffic.
+- Migrations run during deploy before the app starts serving traffic via `preDeployCommand`.
+- The web process must listen on Railway's injected `PORT` variable.
 
 ## Services
 
@@ -19,14 +20,15 @@ Dashboard hosting can be Railway or Vercel, but the Pilot MVP backend deployment
 
 ## Health Check
 
-`GET /health` must return:
+`GET /health` returns HTTP 200 only when database and Redis checks pass:
 
 ```json
 {
   "status": "ok",
-  "db": "ok",
-  "redis": "ok",
-  "scheduler": "ok"
+  "checks": {
+    "database": "ok",
+    "redis": "ok"
+  }
 }
 ```
 

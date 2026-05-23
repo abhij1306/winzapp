@@ -6,6 +6,8 @@ Commit author email for this project: `abhij1306@gmail.com`
 
 ## Required Workflow
 
+Workflow file: `.github/workflows/ci.yml`.
+
 On push and pull request:
 
 1. Start PostgreSQL service.
@@ -14,7 +16,7 @@ On push and pull request:
 4. Run `alembic upgrade head`.
 5. Run `pytest`.
 6. Run `mypy app/`.
-7. Run `ruff check app/`.
+7. Run `ruff check app tests`.
 
 ## Required Secrets
 

@@ -26,14 +26,14 @@ Current focus: `app/main.py` → `app/database.py` → `app/models/` → `migrat
 - [x] S1-T10: WhatsApp sender service
 - [x] S1-T11: Flow engine base and consent flow
 - [x] S1-T12: WhatsApp webhook handler
+- [x] S1-T13: Local CI, GitHub Actions, and Railway skeleton
 
 ### 🔄 In Progress
 *(nothing currently in progress)*
 
 ### ⏭️ Immediate Next Steps (in order)
-1. Complete S1-T13 — local CI, GitHub Actions, and Railway skeleton
-2. Complete S1-T14 — pilot seed data and Meta template registration scaffold
-3. Start S2-T01 — rule-first diagnostics intent router
+1. Complete S1-T14 — pilot seed data and Meta template registration scaffold
+2. Start S2-T01 — rule-first diagnostics intent router
 
 ---
 
@@ -155,6 +155,10 @@ docs/product/traceability.md        Spec coverage map
 ### Local Docker
 - Docker Compose is the supported local Postgres/Redis path, but tests cannot start services if Docker Desktop's Linux engine is not running. Start Docker Desktop before running the full local CI path.
 - Local Compose PostgreSQL uses host port `55432`, not `5432`, to avoid connecting tests to a different local Postgres installation.
+
+### CI/CD Config
+- Quote the GitHub Actions `"on"` key if tests parse workflow YAML with PyYAML; unquoted `on` is treated as boolean YAML 1.1 by PyYAML.
+- Quote `"$schema"` in `railway.toml`; TOML bare keys cannot start with `$`.
 
 ---
 
