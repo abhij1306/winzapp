@@ -10,7 +10,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe -m alembic upgrade head
-.\.venv\Scripts\python.exe scripts/seed_pilot.py
+.\.venv\Scripts\python.exe -m scripts.seed_pilot
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 ```
 

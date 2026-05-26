@@ -29,6 +29,7 @@ The local one-participant smoke sequence is:
 
 1. Start PostgreSQL, Redis, the API, and dashboard from `README.md`.
 2. Set `WA_APP_SECRET`, `WA_VERIFY_TOKEN`, and `WA_ACCESS_TOKEN` in `.env`.
+   Set `WA_OTP_TEMPLATE_NAME` too if owner OTP login must work outside the 24-hour customer service window.
 3. Start the HTTPS tunnel and register `<tunnel-url>/webhooks/whatsapp` in Meta.
 4. Send an inbound message from the opted-in test phone and complete consent.
 5. Exercise booking, report inquiry/cancellation, report upload, failed-message retry, and

@@ -18,7 +18,7 @@ from app.flows.base_flow import FlowMessage
 from app.main import app
 from app.models import Clinic, ConversationSession, FailedMessage, Message, Patient, Test
 from app.services import flow_engine
-from app.templates.hinglish import ADMIN_UNKNOWN_COMMAND
+from app.templates.hinglish import ADMIN_UNKNOWN_COMMAND, render_category_prompt
 from app.webhooks import whatsapp as whatsapp_webhook
 
 SECRET = "test-secret"
@@ -98,6 +98,98 @@ def webhook_body(
                                         "timestamp": "1730000000",
                                         "type": "text",
                                         "text": {"body": text},
+                                    }
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ],
+        },
+    ).encode()
+
+
+def live_like_webhook_body(
+    message_id: str = "wamid-live-1",
+    text: str = "Hi",
+    whatsapp_number: str = "918999635679",
+) -> bytes:
+    return json.dumps(
+        {
+            "object": "whatsapp_business_account",
+            "entry": [
+                {
+                    "id": "1526553658862317",
+                    "changes": [
+                        {
+                            "field": "messages",
+                            "value": {
+                                "messaging_product": "whatsapp",
+                                "metadata": {
+                                    "display_phone_number": "15556680547",
+                                    "phone_number_id": PHONE_NUMBER_ID,
+                                },
+                                "contacts": [
+                                    {
+                                        "profile": {"name": "Abhineet"},
+                                        "wa_id": whatsapp_number,
+                                        "user_id": "IN.2809731156053320",
+                                    }
+                                ],
+                                "messages": [
+                                    {
+                                        "from": whatsapp_number,
+                                        "from_user_id": "IN.2809731156053320",
+                                        "id": message_id,
+                                        "timestamp": "1779773887",
+                                        "text": {"body": text},
+                                        "type": "text",
+                                    }
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ],
+        },
+    ).encode()
+
+
+def status_webhook_body(status: str = "delivered") -> bytes:
+    return json.dumps(
+        {
+            "object": "whatsapp_business_account",
+            "entry": [
+                {
+                    "id": "1526553658862317",
+                    "changes": [
+                        {
+                            "field": "messages",
+                            "value": {
+                                "messaging_product": "whatsapp",
+                                "metadata": {
+                                    "display_phone_number": "15556680547",
+                                    "phone_number_id": PHONE_NUMBER_ID,
+                                },
+                                "contacts": [
+                                    {
+                                        "wa_id": "918999635679",
+                                        "user_id": "IN.2809731156053320",
+                                    }
+                                ],
+                                "statuses": [
+                                    {
+                                        "id": "wamid.status-1",
+                                        "status": status,
+                                        "timestamp": "1779774099",
+                                        "recipient_id": "918999635679",
+                                        "recipient_user_id": "IN.2809731156053320",
+                                        "pricing": {
+                                            "billable": False,
+                                            "pricing_model": "PMP",
+                                            "category": "service",
+                                            "type": "free_customer_service",
+                                        },
                                     }
                                 ],
                             },
@@ -318,6 +410,86 @@ async def test_valid_message_logs_inbound_routes_flow_and_sends_response(
 
 
 @pytest.mark.asyncio
+async def test_live_payload_with_extra_meta_fields_is_accepted(
+    db_session: AsyncSession,
+    webhook_client: httpx.AsyncClient,
+    redis_client: Redis,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clinic = await create_clinic(db_session)
+    clinic_id = clinic.id
+    sent_messages: list[str] = []
+
+    async def fake_handle(
+        _flow: object,
+        _session: object,
+        message: FlowMessage,
+        _db: AsyncSession,
+    ) -> str:
+        assert message.clinic_id == str(clinic_id)
+        assert message.whatsapp_number == "918999635679"
+        assert message.text == "Hi"
+        return "Consent prompt"
+
+    async def fake_send_text(
+        _phone_number_id: str,
+        _to: str,
+        _access_token: str,
+        body: str,
+    ) -> dict[str, object]:
+        sent_messages.append(body)
+        return {"messages": [{"id": "wamid-out"}]}
+
+    monkeypatch.setattr(flow_engine.ConsentFlow, "handle", fake_handle)
+    monkeypatch.setattr(whatsapp_webhook, "send_text", fake_send_text)
+    body = live_like_webhook_body()
+
+    response = await webhook_client.post(
+        "/webhooks/whatsapp",
+        content=body,
+        headers=signed_headers(body),
+    )
+
+    message = (
+        await db_session.execute(select(Message).where(Message.wa_message_id == "wamid-live-1"))
+    ).scalar_one()
+
+    assert response.status_code == 200
+    assert message.clinic_id == clinic_id
+    assert message.direction == "inbound"
+    assert message.content == "Hi"
+    assert sent_messages == ["Consent prompt"]
+
+
+@pytest.mark.asyncio
+async def test_status_webhook_is_ignored_without_error(
+    db_session: AsyncSession,
+    webhook_client: httpx.AsyncClient,
+    redis_client: Redis,
+) -> None:
+    await create_clinic(db_session)
+    body = status_webhook_body()
+
+    response = await webhook_client.post(
+        "/webhooks/whatsapp",
+        content=body,
+        headers=signed_headers(body),
+    )
+
+    message_count = (
+        await db_session.execute(select(func.count()).select_from(Message))
+    ).scalar_one()
+    failed_count = (
+        await db_session.execute(select(func.count()).select_from(FailedMessage))
+    ).scalar_one()
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+    assert message_count == 0
+    assert failed_count == 0
+
+
+@pytest.mark.asyncio
 async def test_consented_patient_routes_to_booking_flow_using_existing_session(
     db_session: AsyncSession,
     webhook_client: httpx.AsyncClient,
@@ -359,7 +531,7 @@ async def test_consented_patient_routes_to_booking_flow_using_existing_session(
     assert sessions == [session]
     assert session.flow == "test_booking"
     assert session.is_active is True
-    assert sent_messages == ["Kaunsa test category chahiye?\n1. Blood"]
+    assert sent_messages == [render_category_prompt(["Blood"])]
 
 
 @pytest.mark.parametrize(

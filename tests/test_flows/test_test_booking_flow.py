@@ -132,7 +132,7 @@ async def test_category_selection_prompts_tests_in_category(
 
     response = await TestBookingFlow().handle(
         session=session,
-        message=FlowMessage(clinic_id=clinic_id, whatsapp_number=whatsapp_number, text="Blood"),
+        message=FlowMessage(clinic_id=clinic_id, whatsapp_number=whatsapp_number, text="1"),
         db=db_session,
     )
 
@@ -160,7 +160,7 @@ async def test_test_selection_prompts_confirmation(
 
     response = await TestBookingFlow().handle(
         session=session,
-        message=FlowMessage(clinic_id=clinic_id, whatsapp_number=whatsapp_number, text="CBC"),
+        message=FlowMessage(clinic_id=clinic_id, whatsapp_number=whatsapp_number, text="1"),
         db=db_session,
     )
 
@@ -192,7 +192,7 @@ async def test_confirmation_creates_walkin_booking_audit_and_clears_session(
 
     response = await TestBookingFlow().handle(
         session=session,
-        message=FlowMessage(clinic_id=clinic_id, whatsapp_number=whatsapp_number, text="haan"),
+        message=FlowMessage(clinic_id=clinic_id, whatsapp_number=whatsapp_number, text="1"),
         db=db_session,
     )
 

@@ -26,7 +26,7 @@ class WALocation(BaseModel):
 
 
 class WAMessage(BaseModel):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
     id: str
     from_: str = Field(alias="from")
@@ -54,7 +54,7 @@ class WAContactProfile(BaseModel):
 
 
 class WAContact(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     wa_id: str
     profile: WAContactProfile | None = None
@@ -68,7 +68,7 @@ class WAValueMetadata(BaseModel):
 
 
 class WAChangeValue(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     messaging_product: str | None = None
     metadata: WAValueMetadata | None = None

@@ -11,7 +11,12 @@ from app.flows.base_flow import FlowMessage
 from app.models import ConversationSession, Patient
 from app.services.audit import write_audit
 from app.services.cache import session_to_dict, update_session_cache
-from app.templates.hinglish import CONSENT_ACCEPTED, CONSENT_DECLINED, CONSENT_PROMPT
+from app.templates.hinglish import (
+    CONSENT_ACCEPTED,
+    CONSENT_DECLINED,
+    CONSENT_PROMPT,
+    render_main_menu,
+)
 from app.utils.datetime_utils import now_ist
 
 CONSENT_FLOW = "consent"
@@ -37,7 +42,7 @@ class ConsentFlow:
             await db.flush()
             finish_session(session, patient, CONSENT_GRANTED, automation_stopped=False)
             await commit_audit_and_cache(session, message, patient, db, "patient.opt_in")
-            return CONSENT_ACCEPTED
+            return f"{CONSENT_ACCEPTED}\n\n{render_main_menu()}"
 
         if decision is False:
             patient = await upsert_patient_consent(message, db, opt_in=False)
@@ -90,6 +95,11 @@ async def touch_session(
 
 
 def parse_consent_decision(text: str) -> bool | None:
+    normalized = text.strip().lower()
+    if normalized == "1":
+        return True
+    if normalized == "2":
+        return False
     words = set(re.findall(r"[a-zA-Z]+", text.lower()))
     if words & NO_WORDS:
         return False

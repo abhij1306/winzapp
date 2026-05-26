@@ -54,7 +54,7 @@ Run these commands from the repository root in PowerShell.
 
    ```powershell
    .\.venv\Scripts\python.exe -m alembic upgrade head
-   .\.venv\Scripts\python.exe scripts\seed_pilot.py
+   .\.venv\Scripts\python.exe -m scripts.seed_pilot
    .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
    ```
 
@@ -104,6 +104,8 @@ Copy `.env.example` to `.env` for development. Do not commit credentials.
 | `WA_APP_SECRET` | Empty | Webhook signature verification |
 | `WA_VERIFY_TOKEN` | Empty | Meta webhook registration |
 | `WA_ACCESS_TOKEN` | Empty | Outbound WhatsApp messages and OTP delivery |
+| `WA_OTP_TEMPLATE_NAME` | Empty | Optional approved OTP template name for delivery outside the 24-hour window |
+| `WA_OTP_TEMPLATE_LANGUAGE_CODE` | `en_US` | Language code for the OTP template |
 | `LLM_PROVIDER` | `groq` | Optional LLM fallback provider |
 | `LLM_MODEL` | `llama-3.3-70b-versatile` | Optional LLM fallback model |
 | `GROQ_API_KEY` | Empty | Optional Groq-backed fallback |

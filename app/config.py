@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     wa_app_secret: str = ""
     wa_verify_token: str = ""
     wa_access_token: str = ""
+    wa_otp_template_name: str = ""
+    wa_otp_template_language_code: str = "en_US"
 
     llm_provider: str = "groq"
     llm_model: str = "llama-3.3-70b-versatile"

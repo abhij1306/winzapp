@@ -107,6 +107,76 @@ async def test_send_otp_stores_code_and_sends_whatsapp_message(
 
 
 @pytest.mark.asyncio
+async def test_send_otp_uses_template_when_configured(
+    db_session: AsyncSession,
+    redis_client: Redis,
+    api_client: httpx.AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clinic = await create_owner_clinic(db_session, "+919000000099")
+    settings = get_settings()
+    original_template_name = settings.wa_otp_template_name
+    original_language_code = settings.wa_otp_template_language_code
+    sent_templates = []
+
+    async def fake_send_template(
+        phone_number_id: str,
+        to: str,
+        access_token: str,
+        template_name: str,
+        language_code: str,
+        components: list[dict[str, object]] | None = None,
+    ) -> dict[str, object]:
+        sent_templates.append(
+            {
+                "phone_number_id": phone_number_id,
+                "to": to,
+                "template_name": template_name,
+                "language_code": language_code,
+                "components": components,
+            },
+        )
+        return {"messages": [{"id": "wamid.otp.template"}]}
+
+    async def fail_send_text(*args: object, **kwargs: object) -> dict[str, object]:
+        raise AssertionError("send_text should not be used when OTP template is configured")
+
+    settings.wa_otp_template_name = "winzapp_otp"
+    settings.wa_otp_template_language_code = "en_US"
+    monkeypatch.setattr("app.services.auth.generate_otp", lambda: "123456")
+    monkeypatch.setattr("app.services.whatsapp_sender.send_template", fake_send_template)
+    monkeypatch.setattr("app.services.whatsapp_sender.send_text", fail_send_text)
+
+    try:
+        response = await api_client.post(
+            "/api/v1/auth/otp/send",
+            json={"owner_whatsapp": clinic.owner_whatsapp},
+        )
+    finally:
+        settings.wa_otp_template_name = original_template_name
+        settings.wa_otp_template_language_code = original_language_code
+
+    cached = await redis_client.get(otp_cache_key(clinic.owner_whatsapp))
+
+    assert response.status_code == 200
+    assert cached is not None
+    assert sent_templates == [
+        {
+            "phone_number_id": "phone-number-id",
+            "to": clinic.owner_whatsapp,
+            "template_name": "winzapp_otp",
+            "language_code": "en_US",
+            "components": [
+                {
+                    "type": "body",
+                    "parameters": [{"type": "text", "text": "123456"}],
+                },
+            ],
+        },
+    ]
+
+
+@pytest.mark.asyncio
 async def test_send_otp_unknown_owner_returns_error_envelope(
     redis_client: Redis,
     api_client: httpx.AsyncClient,

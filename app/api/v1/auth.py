@@ -39,12 +39,7 @@ async def send_otp(
 
     otp = auth_service.generate_otp()
     await auth_service.store_otp(payload.owner_whatsapp, str(clinic.id), otp)
-    await whatsapp_sender.send_text(
-        phone_number_id=clinic_phone_number_id(clinic),
-        to=payload.owner_whatsapp,
-        access_token=get_settings().wa_access_token,
-        body=OTP_LOGIN_MESSAGE.format(otp=otp),
-    )
+    await send_otp_message(clinic_phone_number_id(clinic), payload.owner_whatsapp, otp)
     return OtpSendResponse(data=OtpSendData(status="otp_sent"))
 
 
@@ -88,3 +83,29 @@ async def find_owner_clinic(db: AsyncSession, owner_whatsapp: str) -> Clinic | N
 def clinic_phone_number_id(clinic: Clinic) -> str:
     value = clinic.settings.get("wa_phone_number_id")
     return str(value or "")
+
+
+async def send_otp_message(phone_number_id: str, owner_whatsapp: str, otp: str) -> None:
+    settings = get_settings()
+    if settings.wa_otp_template_name:
+        await whatsapp_sender.send_template(
+            phone_number_id=phone_number_id,
+            to=owner_whatsapp,
+            access_token=settings.wa_access_token,
+            template_name=settings.wa_otp_template_name,
+            language_code=settings.wa_otp_template_language_code,
+            components=[
+                {
+                    "type": "body",
+                    "parameters": [{"type": "text", "text": otp}],
+                },
+            ],
+        )
+        return
+
+    await whatsapp_sender.send_text(
+        phone_number_id=phone_number_id,
+        to=owner_whatsapp,
+        access_token=settings.wa_access_token,
+        body=OTP_LOGIN_MESSAGE.format(otp=otp),
+    )

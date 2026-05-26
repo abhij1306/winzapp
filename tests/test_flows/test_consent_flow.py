@@ -11,7 +11,12 @@ from app.flows.base_flow import FlowMessage
 from app.flows.consent_flow import ConsentFlow
 from app.models import AuditLog, Clinic, ConversationSession, Patient
 from app.services.cache import get_session_cached
-from app.templates.hinglish import CONSENT_ACCEPTED, CONSENT_DECLINED, CONSENT_PROMPT
+from app.templates.hinglish import (
+    CONSENT_ACCEPTED,
+    CONSENT_DECLINED,
+    CONSENT_PROMPT,
+    render_main_menu,
+)
 
 
 @pytest_asyncio.fixture
@@ -123,7 +128,7 @@ async def test_consent_yes_updates_patient_and_audit_log(
     ).scalar_one()
     cached = await get_session_cached(whatsapp_number, str(clinic_id), db_session)
 
-    assert response == CONSENT_ACCEPTED
+    assert response == f"{CONSENT_ACCEPTED}\n\n{render_main_menu()}"
     assert patient.opt_in is True
     assert patient.opt_in_at is not None
     assert session.patient_id == patient.id

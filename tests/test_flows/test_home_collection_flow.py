@@ -176,7 +176,7 @@ async def test_home_collection_test_selection_captures_fasting_flag_and_asks_add
         message=FlowMessage(
             clinic_id=clinic_id,
             whatsapp_number=whatsapp_number,
-            text="Lipid Profile",
+            text="1",
         ),
         db=db_session,
     )

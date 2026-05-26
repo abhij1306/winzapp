@@ -113,11 +113,11 @@ async def handle_category_step(
     category = match_text(message.text, categories)
     if category is None:
         if not session.context:
-            session.context = {}
+            session.context = {"menu_prompted": True}
             await persist_session(session, message, db)
             return render_category_prompt(categories)
         await persist_session(session, message, db)
-        return TEST_BOOKING_UNKNOWN_CATEGORY
+        return f"{TEST_BOOKING_UNKNOWN_CATEGORY}\n\n{render_category_prompt(categories)}"
 
     category_tests = [item for item in tests if item.get("category") == category]
     session.step = SELECT_TEST
@@ -140,7 +140,11 @@ async def handle_test_step(
     selected = match_test(message.text, available_tests)
     if selected is None:
         await persist_session(session, message, db)
-        return TEST_BOOKING_UNKNOWN_TEST
+        category = str(session.context.get("category") or "")
+        return (
+            f"{TEST_BOOKING_UNKNOWN_TEST}\n\n"
+            f"{render_test_selection_prompt(category, test_names(available_tests))}"
+        )
 
     price = str(selected.get("price") or "0.00")
     session.step = CONFIRM_BOOKING
@@ -251,6 +255,10 @@ def match_text(message_text: str, choices: list[str]) -> str | None:
     for choice in choices:
         if normalize(choice) == normalized:
             return choice
+    if normalized.isdigit():
+        index = int(normalized) - 1
+        if 0 <= index < len(choices):
+            return choices[index]
     return None
 
 
@@ -277,9 +285,18 @@ def ids_from_context(value: object) -> set[str]:
 
 
 def parse_confirmation(message_text: str) -> bool | None:
+    normalized = message_text.strip().lower()
+    if normalized == "1":
+        return True
+    if normalized == "2":
+        return False
     words = set(re.findall(r"[a-zA-Z]+", message_text.lower()))
     if words & NO_WORDS:
         return False
     if words & YES_WORDS:
         return True
     return None
+
+
+def test_names(tests: list[dict[str, object]]) -> list[str]:
+    return [str(item.get("name") or "") for item in tests]

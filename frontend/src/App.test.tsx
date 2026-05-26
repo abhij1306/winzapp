@@ -81,6 +81,22 @@ describe('App', () => {
       otp: '123456',
     });
   });
+
+  it('normalizes local owner WhatsApp input before sending OTP', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByLabelText(/Clinic ID/i), clinicId);
+    await user.type(screen.getByLabelText(/Owner WhatsApp/i), '9000000001');
+    await user.click(screen.getByRole('button', { name: /Send OTP/i }));
+
+    const calls = vi.mocked(fetch).mock.calls;
+    const sendRequest = calls.find(([input]) => String(input).endsWith('/auth/otp/send'));
+
+    expect(JSON.parse(String(sendRequest?.[1]?.body))).toEqual({
+      owner_whatsapp: '+919000000001',
+    });
+  });
 });
 
 async function login(user: ReturnType<typeof userEvent.setup>) {

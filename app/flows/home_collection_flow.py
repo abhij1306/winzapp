@@ -136,7 +136,10 @@ async def handle_test_step(
     )
     if selected is None:
         await persist_session(session, message, db)
-        return HOME_COLLECTION_UNKNOWN_TEST
+        return (
+            f"{HOME_COLLECTION_UNKNOWN_TEST}\n\n"
+            f"{render_home_test_selection_prompt(test_names(tests))}"
+        )
 
     requires_fasting = selected.get("requires_fasting") is True
     session.step = CAPTURE_ADDRESS
@@ -170,7 +173,7 @@ async def handle_slot_step(
     collection_slot = parse_slot_choice(message.text)
     if collection_slot is None:
         await persist_session(session, message, db)
-        return HOME_COLLECTION_UNKNOWN_SLOT
+        return f"{HOME_COLLECTION_UNKNOWN_SLOT}\n\n{render_morning_slot_prompt()}"
 
     booking = create_home_collection_booking(session, message, collection_slot)
     db.add(booking)

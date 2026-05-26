@@ -239,18 +239,30 @@ function LoginScreen({
 
   async function sendOtp(event: FormEvent) {
     event.preventDefault();
-    await publicFetch('/auth/otp/send', { method: 'POST', body: { owner_whatsapp: ownerWhatsapp } });
-    setOtpSent(true);
-    setNotice('OTP sent on WhatsApp.');
+    const normalizedOwnerWhatsapp = normalizeWhatsapp(ownerWhatsapp);
+    setOwnerWhatsapp(normalizedOwnerWhatsapp);
+    try {
+      await publicFetch('/auth/otp/send', { method: 'POST', body: { owner_whatsapp: normalizedOwnerWhatsapp } });
+      setOtpSent(true);
+      setNotice('OTP sent on WhatsApp.');
+    } catch (error) {
+      setNotice(errorMessage(error));
+    }
   }
 
   async function verifyOtp(event: FormEvent) {
     event.preventDefault();
-    const response = await publicFetch<{ data: { access_token: string } }>('/auth/otp/verify', {
-      method: 'POST',
-      body: { owner_whatsapp: ownerWhatsapp, otp },
-    });
-    await onVerified({ clinicId, token: response.data.access_token });
+    const normalizedOwnerWhatsapp = normalizeWhatsapp(ownerWhatsapp);
+    setOwnerWhatsapp(normalizedOwnerWhatsapp);
+    try {
+      const response = await publicFetch<{ data: { access_token: string } }>('/auth/otp/verify', {
+        method: 'POST',
+        body: { owner_whatsapp: normalizedOwnerWhatsapp, otp },
+      });
+      await onVerified({ clinicId, token: response.data.access_token });
+    } catch (error) {
+      setNotice(errorMessage(error));
+    }
   }
 
   return (
@@ -650,6 +662,32 @@ async function publicFetch<T>(path: string, init: ApiRequestInit = {}): Promise<
     body = JSON.stringify(init.body);
   }
   const response = await fetch(`/api/v1${path}`, { ...init, headers, body });
-  if (!response.ok) throw new Error(`Request failed with ${response.status}`);
+  if (!response.ok) {
+    let message = `Request failed with ${response.status}`;
+    try {
+      const payload = (await response.json()) as { error?: { message?: string } };
+      if (payload.error?.message) {
+        message = payload.error.message;
+      }
+    } catch {
+      // Ignore JSON parsing failures and fall back to the HTTP status message.
+    }
+    throw new Error(message);
+  }
   return (await response.json()) as T;
+}
+
+function normalizeWhatsapp(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return trimmed;
+  if (trimmed.startsWith('+')) return trimmed;
+
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.length === 10) return `+91${digits}`;
+  if (digits.length > 0) return `+${digits}`;
+  return trimmed;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Request failed.';
 }
